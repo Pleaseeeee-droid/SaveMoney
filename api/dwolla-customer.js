@@ -13,21 +13,29 @@ async function getSupabaseUser(token){
 }
 
 async function dwollaToken(){
-  const key=process.env.DWOLLA_KEY;
-  const secret=process.env.DWOLLA_SECRET;
+  const key=String(process.env.DWOLLA_KEY||'').trim();
+  const secret=String(process.env.DWOLLA_SECRET||'').trim();
   if(!key||!secret)throw new Error('Dwolla is not configured.');
+
+  const auth=Buffer.from(`${key}:${secret}`,'utf8').toString('base64');
   const r=await fetch('https://api-sandbox.dwolla.com/token',{
     method:'POST',
     headers:{
-      Authorization:`Basic ${Buffer.from(`${key}:${secret}`).toString('base64')}`,
+      Authorization:`Basic ${auth}`,
       'Content-Type':'application/x-www-form-urlencoded',
       Accept:'application/vnd.dwolla.v1.hal+json'
     },
-    body:'grant_type=client_credentials'
+    body:new URLSearchParams({grant_type:'client_credentials'}).toString()
   });
+
   const text=await r.text();
-  let data={};try{data=JSON.parse(text);}catch{}
-  if(!r.ok||!data.access_token)throw new Error(data.error_description||data.error||`Dwolla authentication failed (${r.status}).`);
+  let data={};
+  try{data=JSON.parse(text);}catch{}
+
+  if(!r.ok||!data.access_token){
+    const msg=data.error_description||data.error||data.message||`Dwolla authentication failed (${r.status}).`;
+    throw new Error(`${msg} [HTTP ${r.status}]`);
+  }
   return data.access_token;
 }
 
@@ -97,7 +105,8 @@ export default async function handler(req,res){
     });
 
     const raw=await create.text();
-    let data={};try{data=JSON.parse(raw);}catch{}
+    let data={};
+    try{data=JSON.parse(raw);}catch{}
     if(!create.ok){
       return res.status(create.status).json({ok:false,error:data.message||data.code||raw||`Dwolla customer creation failed (${create.status}).`});
     }
