@@ -10,7 +10,7 @@ let activeAction=null;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(vaults));render();}
 function total(){return vaults.reduce((a,v)=>a+Number(v.balance||0),0)}
 function unlocked(v){return today()>=parseDate(v.unlockDate)}
-function escapeHtml(s=''){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function escapeHtml(s=''){return s.replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
 
 function render(){
   $('#totalBalance').textContent=money(total());
@@ -48,7 +48,24 @@ $('#newVaultBtn').onclick=()=>{
 $('#closeDialogBtn').onclick=()=>$('#vaultDialog').close();
 $('#closeActionBtn').onclick=()=>$('#actionDialog').close();
 $('#closeInfoBtn').onclick=$('#dismissInfoBtn').onclick=()=>$('#infoDialog').close();
-$('#connectBankBtn').onclick=()=>$('#infoDialog').showModal();
+
+$('#connectBankBtn').onclick=async()=>{
+  const btn=$('#connectBankBtn');
+  btn.disabled=true;
+  btn.textContent='Opening Stripe…';
+  try{
+    const response=await fetch('/api/create-test-checkout',{method:'POST'});
+    const data=await response.json();
+    if(!response.ok||!data.url)throw new Error(data.error||'Could not create Stripe checkout.');
+    window.location.href=data.url;
+  }catch(error){
+    $('#infoTitle').textContent='Stripe test could not start';
+    $('#infoText').textContent=error.message;
+    $('#infoDialog').showModal();
+    btn.disabled=false;
+    btn.textContent='Test $5 deposit';
+  }
+};
 
 $('#vaultForm').addEventListener('submit',e=>{
   e.preventDefault();
@@ -75,6 +92,15 @@ $('#exportBtn').onclick=()=>{
   const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),vaults},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='savemoney-backup.json';a.click();URL.revokeObjectURL(a.href);
 };
+
+const stripeResult=new URLSearchParams(location.search).get('stripe_test');
+if(stripeResult==='success'){
+  setTimeout(()=>alert('Stripe sandbox payment succeeded. No real money was charged. This test payment is not added to a vault yet.'),100);
+  history.replaceState({},'',location.pathname);
+}else if(stripeResult==='cancelled'){
+  setTimeout(()=>alert('Stripe sandbox checkout was cancelled. No money was charged.'),100);
+  history.replaceState({},'',location.pathname);
+}
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 render();
