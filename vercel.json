@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/supabase-status",
+      "schedule": "0 14 * * *"
+    }
+  ]
+}
