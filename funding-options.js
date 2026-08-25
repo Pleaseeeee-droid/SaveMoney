@@ -8,6 +8,7 @@
     try{return JSON.parse(localStorage.getItem(AUTO_KEY)||'null');}catch{return null;}
   }
   function saveSchedule(schedule){localStorage.setItem(AUTO_KEY,JSON.stringify(schedule));}
+  function removeSchedule(){localStorage.removeItem(AUTO_KEY);}
 
   const originalOpenAction=openAction;
   openAction=function(id,type){
@@ -49,9 +50,14 @@
   }
 
   function renderSchedule(){
-    const s=loadSchedule(),summary=$('#autoPaySummary');
+    const s=loadSchedule(),summary=$('#autoPaySummary'),toggle=$('#toggleAutoPayBtn'),remove=$('#removeAutoPayBtn');
     refreshVaultOptions();
-    if(!s){summary.textContent='No auto-pay schedule saved.';return;}
+    if(!s){
+      summary.textContent='No auto-pay schedule saved.';
+      if(toggle)toggle.hidden=true;
+      if(remove)remove.hidden=true;
+      return;
+    }
     const v=vaults.find(x=>x.id===s.vaultId);
     $('#autoPayVault').value=s.vaultId||'';
     $('#autoPaySource').value=s.source||'bank';
@@ -59,20 +65,40 @@
     $('#autoPayDay').value=s.day||1;
     $('#autoPayEnabled').checked=Boolean(s.enabled);
     summary.textContent=`${s.enabled?'Enabled':'Paused'} · $${Number(s.amount).toFixed(2)} on day ${s.day} each month · ${s.source==='bank'?'Bank account':'Debit card'} · ${v?.name||'Vault'}`;
+    if(toggle){toggle.hidden=false;toggle.textContent=s.enabled?'Pause auto-pay':'Enable auto-pay';}
+    if(remove)remove.hidden=false;
   }
 
   $('#autoPayForm')?.addEventListener('submit',e=>{
     e.preventDefault();
+    const existing=loadSchedule()||{};
     const schedule={
+      ...existing,
       vaultId:$('#autoPayVault').value,
       source:$('#autoPaySource').value,
       amount:Number($('#autoPayAmount').value),
       day:Number($('#autoPayDay').value),
-      enabled:$('#autoPayEnabled').checked
+      enabled:$('#autoPayEnabled').checked,
+      timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'
     };
     if(!schedule.vaultId||!Number.isFinite(schedule.amount)||schedule.amount<=0||schedule.day<1||schedule.day>28){alert('Choose a vault, amount, and day from 1 to 28.');return;}
     saveSchedule(schedule);renderSchedule();
-    alert('Sandbox auto-pay schedule saved. It will run automatically when SaveMoney is open on the selected day. Background scheduling will be added before real-money launch.');
+    alert(`Sandbox auto-pay saved and ${schedule.enabled?'enabled':'paused'}. Background execution is being moved to the server so it can run while SaveMoney is closed.`);
+  });
+
+  $('#toggleAutoPayBtn')?.addEventListener('click',()=>{
+    const s=loadSchedule();if(!s)return;
+    s.enabled=!s.enabled;saveSchedule(s);renderSchedule();
+    alert(`Auto-pay ${s.enabled?'enabled':'paused'}.`);
+  });
+
+  $('#removeAutoPayBtn')?.addEventListener('click',()=>{
+    const s=loadSchedule();if(!s)return;
+    if(!confirm('Remove this auto-pay schedule?'))return;
+    removeSchedule();
+    $('#autoPayForm')?.reset();
+    renderSchedule();
+    alert('Auto-pay schedule removed.');
   });
 
   async function runAutoPayIfDue(){
