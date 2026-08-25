@@ -23,7 +23,7 @@ async function dwollaToken(){
     headers:{
       Authorization:`Basic ${auth}`,
       'Content-Type':'application/x-www-form-urlencoded',
-      Accept:'application/vnd.dwolla.v1.hal+json'
+      Accept:'application/json'
     },
     body:new URLSearchParams({grant_type:'client_credentials'}).toString()
   });
