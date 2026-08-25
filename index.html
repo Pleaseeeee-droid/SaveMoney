@@ -38,7 +38,7 @@
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. Stripe deposits are test payments; no real bank custody is connected yet.</section>
+    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. New deposits use Dwolla Sandbox bank transfers; no real money or real bank custody is connected yet.</section>
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
@@ -68,7 +68,7 @@
       <label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label>
       <label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label>
       <label>Unlock date<input id="vaultDate" type="date" required /></label>
-      <div class="lockWarning">New vaults start at $0. Add money through Stripe Sandbox after creating the vault.</div>
+      <div class="lockWarning">New vaults start at $0. Add money through Dwolla Sandbox after creating the vault.</div>
       <button class="primary wide" type="submit">Create locked vault</button>
     </form>
   </dialog>
@@ -87,5 +87,6 @@
   <script src="app.js?v=9" defer></script>
   <script src="dwolla-bank-verify.js?v=1" defer></script>
   <script src="dwolla-transfer-test.js?v=3" defer></script>
+  <script src="dwolla-vault-deposit.js?v=1" defer></script>
 </body>
 </html>
