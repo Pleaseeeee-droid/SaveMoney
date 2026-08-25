@@ -7,7 +7,7 @@
   <meta name="description" content="SaveMoney — private date-locked savings goals." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="styles.css?v=9" />
   <title>SaveMoney</title>
 </head>
 <body>
@@ -38,7 +38,7 @@
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. Stripe deposits are test payments; Dwolla is connected separately for sandbox bank/balance transfers. No real bank custody is connected yet.</section>
+    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. Card deposits use Stripe test payments; bank deposits use Dwolla Sandbox. No real bank custody is connected yet.</section>
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
@@ -50,6 +50,20 @@
         <div class="paymentMethodActions"><button id="addCardBtn" class="primary">Add debit card</button><button id="connectBankBtn" class="secondary">Connect bank account</button></div>
       </div>
       <div id="paymentMethodList" class="paymentMethodList"><div class="paymentMethodEmpty">Loading payment methods…</div></div>
+    </section>
+
+    <section class="card autoPayCard">
+      <div class="autoPayIntro"><div><p class="eyebrow">AUTOMATIC SAVING</p><h2>Auto-pay</h2><p class="muted">Pick a vault, funding method, fixed amount, and monthly day.</p></div><span class="badge">Sandbox</span></div>
+      <form id="autoPayForm" class="autoPayForm">
+        <label>Vault<select id="autoPayVault" required></select></label>
+        <label>Pay from<select id="autoPaySource"><option value="bank">Bank account</option><option value="card">Debit card</option></select></label>
+        <label>Fixed amount<div class="moneyInput"><span>$</span><input id="autoPayAmount" type="number" min="0.50" step="0.01" placeholder="25.00" required /></div></label>
+        <label>Day each month<select id="autoPayDay">${Array.from({length:28},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></label>
+        <label class="autoPayToggle"><input id="autoPayEnabled" type="checkbox" checked /><span>Enable auto-pay</span></label>
+        <button class="primary" type="submit">Save auto-pay</button>
+      </form>
+      <p id="autoPaySummary" class="muted autoPaySummary">No auto-pay schedule saved.</p>
+      <p class="autoPayNote">Sandbox behavior: the schedule runs when SaveMoney is open on the selected day. A background server scheduler and final recurring-payment authorization will be required before real-money launch.</p>
     </section>
 
     <section class="card bankCard" id="dwollaSetupCard">
@@ -77,7 +91,7 @@
       <label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label>
       <label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label>
       <label>Unlock date<input id="vaultDate" type="date" required /></label>
-      <div class="lockWarning">New vaults start at $0. Add money through Stripe Sandbox after creating the vault.</div>
+      <div class="lockWarning">New vaults start at $0. Add money by debit card or connected bank account after creating the vault.</div>
       <button class="primary wide" type="submit">Create locked vault</button>
     </form>
   </dialog>
@@ -86,6 +100,7 @@
     <form id="actionForm" method="dialog" class="dialogCard">
       <div class="dialogHead"><div><p id="actionEyebrow" class="eyebrow">VAULT ACTION</p><h2 id="actionTitle">Add money</h2></div><button id="closeActionBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
       <p id="actionDescription" class="muted"></p>
+      <label id="fundingSourceRow">Pay from<select id="fundingSource"><option value="card">Debit card</option><option value="bank">Bank account</option></select></label>
       <label>Amount<div class="moneyInput"><span>$</span><input id="actionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></div></label>
       <button id="actionSubmit" class="primary wide" type="submit">Continue</button>
     </form>
@@ -109,5 +124,6 @@
   <script src="dwolla-bank-verify.js?v=1" defer></script>
   <script src="dwolla-transfer-test.js?v=3" defer></script>
   <script src="payment-methods.js?v=1" defer></script>
+  <script src="funding-options.js?v=1" defer></script>
 </body>
 </html>
