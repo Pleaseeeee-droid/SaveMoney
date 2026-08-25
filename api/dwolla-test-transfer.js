@@ -87,15 +87,14 @@ export default async function handler(req,res){
         Authorization:`Bearer ${dToken}`,
         Accept:'application/vnd.dwolla.v1.hal+json',
         'Content-Type':'application/vnd.dwolla.v1.hal+json',
-        'Idempotency-Key':`savemoney-${String(user.id).toLowerCase()}-bank-to-balance-1`
+        'Idempotency-Key':`savemoney-${String(user.id).toLowerCase()}-bank-to-balance-1-v2`
       },
       body:JSON.stringify({
         _links:{
           source:{href:`https://api-sandbox.dwolla.com/funding-sources/${bank.id}`},
           destination:{href:`https://api-sandbox.dwolla.com/funding-sources/${balance.id}`}
         },
-        amount:{currency:'USD',value:'1.00'},
-        metadata:{purpose:'savemoney_sandbox_bank_to_balance_test'}
+        amount:{currency:'USD',value:'1.00'}
       })
     });
 
