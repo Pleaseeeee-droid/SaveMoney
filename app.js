@@ -12,7 +12,7 @@ const normalizeVault=v=>({id:v.id,name:v.name,goal:Number(v.goal_amount??v.goal?
 function authHeaders(extra={}){return {'Content-Type':'application/json',Authorization:`Bearer ${authSession?.accessToken||''}`,...extra};}
 function total(){return vaults.reduce((a,v)=>a+Number(v.balance||0),0)}
 function unlocked(v){return today()>=parseDate(v.unlockDate)}
-function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));}
 
 async function loadVaults(){
   if(!authSession?.accessToken)return;
@@ -28,15 +28,6 @@ async function loadVaults(){
   }catch(err){
     list.innerHTML=`<section class="empty card"><h3>Could not load vaults</h3><p class="muted">${escapeHtml(err.message)}</p></section>`;
   }
-}
-async function updateVaultBalance(vault,balance){
-  const r=await fetch('/api/vaults',{method:'PATCH',headers:authHeaders(),body:JSON.stringify({id:vault.id,balance})});
-  const data=await r.json();
-  if(!r.ok)throw new Error(data.error||'Could not update vault.');
-  const updated=normalizeVault(data.vault);
-  const i=vaults.findIndex(v=>v.id===updated.id);if(i>=0)vaults[i]=updated;
-  render();
-  return updated;
 }
 
 function setSignedIn(session){
@@ -114,7 +105,7 @@ function openAction(id,type){
   if(type==='withdraw'&&!unlocked(v)){alert(`This vault is locked until ${v.unlockDate}.`);return;}
   activeAction={id,type};
   $('#actionTitle').textContent=type==='add'?'Add money':'Withdraw money';
-  $('#actionDescription').textContent=type==='add'?`Send a Stripe sandbox deposit to “${v.name}”. No real money will move.`:`“${v.name}” is unlocked. Withdrawal is still sandbox-only in this build.`;
+  $('#actionDescription').textContent=type==='add'?`Send a Stripe sandbox deposit to “${v.name}”. No real money will move.`:`“${v.name}” is unlocked. The database will verify the unlock date again before allowing this sandbox withdrawal.`;
   $('#actionSubmit').textContent=type==='add'?'Continue to Stripe':'Withdraw sandbox balance';
   $('#actionAmount').value='';$('#actionDialog').showModal();
 }
@@ -142,8 +133,17 @@ $('#actionForm').addEventListener('submit',async e=>{
   e.preventDefault();if(!activeAction)return;
   const v=vaults.find(x=>x.id===activeAction.id),amount=Number($('#actionAmount').value);if(!v||amount<=0)return;
   if(activeAction.type==='withdraw'){
-    if(!unlocked(v)){alert('This vault is still locked.');return;}if(amount>v.balance){alert('That amount is more than the vault balance.');return;}
-    try{await updateVaultBalance(v,Number(v.balance)-amount);$('#actionDialog').close();activeAction=null;}catch(err){alert(err.message);}return;
+    const submit=$('#actionSubmit');submit.disabled=true;submit.textContent='Checking lock…';
+    try{
+      const response=await fetch('/api/withdraw-vault',{method:'POST',headers:authHeaders(),body:JSON.stringify({vaultId:v.id,amount})});
+      const data=await response.json();
+      if(!response.ok||!data.ok)throw new Error(data.error||'Withdrawal was rejected.');
+      $('#actionDialog').close();activeAction=null;
+      await loadVaults();
+      alert(`${money(amount)} sandbox withdrawal completed. No real money moved.`);
+    }catch(err){alert(err.message);}
+    finally{submit.disabled=false;submit.textContent='Withdraw sandbox balance';}
+    return;
   }
   const submit=$('#actionSubmit');submit.disabled=true;submit.textContent='Opening Stripe…';
   try{
