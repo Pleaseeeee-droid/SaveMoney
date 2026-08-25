@@ -1,7 +1,7 @@
 (()=>{
+  const style=document.createElement('link');style.rel='stylesheet';style.href='blockchain-vault.css?v=1';document.head.appendChild(style);
   const $=s=>document.querySelector(s);
   const CHAIN_ID='0xaa36a7';
-  const CHAIN_NAME='Sepolia';
   const TOKEN_ADDRESS='0x5Df8a09276305F6c3c3F523bE5FF4fDE4829Dc92';
   const VAULT_ADDRESS='0x2128E0ed09DeD1F2031DE0B28bfbaE94EfcfCb89';
   const TOKEN_DECIMALS=6;
@@ -34,7 +34,9 @@
   }
 
   function setBusy(busy){
-    ['#chainConnectBtn','#chainRefreshBtn','#chainDepositBtn','#chainWithdrawBtn'].forEach(sel=>{const b=$(sel);if(b)b.disabled=busy;});
+    ['#chainConnectBtn','#chainRefreshBtn','#chainDepositBtn'].forEach(sel=>{const b=$(sel);if(b)b.disabled=busy;});
+    const withdraw=$('#chainWithdrawBtn');
+    if(withdraw)withdraw.disabled=busy||!unlockTimestamp||Math.floor(Date.now()/1000)<unlockTimestamp;
   }
 
   async function ensureSepolia(){
@@ -118,7 +120,7 @@
     try{
       btn.textContent='1/2 Approving…';setStatus('MetaMask will ask you to approve mUSDC for this vault.');
       const approveTx=await token.approve(VAULT_ADDRESS,units);await approveTx.wait();
-      btn.disabled=false;btn.textContent='2/2 Depositing…';setStatus('Approval confirmed. MetaMask will ask you to make the locked deposit.');
+      btn.textContent='2/2 Depositing…';setStatus('Approval confirmed. MetaMask will ask you to make the locked deposit.');
       const depositTx=await vault.deposit(units);await depositTx.wait();
       $('#chainDepositAmount').value='';
       await refresh();
