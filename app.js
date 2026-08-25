@@ -12,7 +12,7 @@ const normalizeVault=v=>({id:v.id,name:v.name,goal:Number(v.goal_amount??v.goal?
 function authHeaders(extra={}){return {'Content-Type':'application/json',Authorization:`Bearer ${authSession?.accessToken||''}`,...extra};}
 function total(){return vaults.reduce((a,v)=>a+Number(v.balance||0),0)}
 function unlocked(v){return today()>=parseDate(v.unlockDate)}
-function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));}
+function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 async function loadVaults(){
   if(!authSession?.accessToken)return;
@@ -90,6 +90,7 @@ function render(){
   document.querySelectorAll('.withdrawBtn').forEach(b=>b.onclick=()=>openAction(b.dataset.id,'withdraw'));
   document.querySelectorAll('.deleteVaultBtn').forEach(b=>b.onclick=()=>deleteVault(b.dataset.id));
 }
+
 async function deleteVault(id){
   const v=vaults.find(x=>x.id===id);if(!v)return;
   if(Number(v.balance||0)!==0){alert('Only empty vaults can be deleted.');return;}
@@ -100,6 +101,7 @@ async function deleteVault(id){
     vaults=vaults.filter(x=>x.id!==id);render();
   }catch(err){alert(err.message);}
 }
+
 function openAction(id,type){
   const v=vaults.find(x=>x.id===id);if(!v)return;
   if(type==='withdraw'&&!unlocked(v)){alert(`This vault is locked until ${v.unlockDate}.`);return;}
@@ -113,8 +115,6 @@ function openAction(id,type){
 $('#newVaultBtn').onclick=()=>{const d=new Date();d.setDate(d.getDate()+1);$('#vaultDate').min=d.toISOString().slice(0,10);$('#vaultDate').value=d.toISOString().slice(0,10);$('#vaultDialog').showModal();};
 $('#closeDialogBtn').onclick=()=>$('#vaultDialog').close();
 $('#closeActionBtn').onclick=()=>$('#actionDialog').close();
-$('#closeInfoBtn').onclick=$('#dismissInfoBtn').onclick=()=>$('#infoDialog').close();
-$('#connectBankBtn').onclick=async()=>{const btn=$('#connectBankBtn');btn.disabled=true;btn.textContent='Opening Stripe…';try{const response=await fetch('/api/create-test-checkout',{method:'POST'});const data=await response.json();if(!response.ok||!data.url)throw new Error(data.error||'Could not create Stripe checkout.');window.location.href=data.url;}catch(error){$('#infoTitle').textContent='Stripe test could not start';$('#infoText').textContent=error.message;$('#infoDialog').showModal();btn.disabled=false;btn.textContent='Test $5 deposit';}};
 
 $('#vaultForm').addEventListener('submit',async e=>{
   e.preventDefault();
@@ -159,8 +159,7 @@ async function handleVaultPaymentReturn(){
   if(result==='cancelled'){history.replaceState({},'',location.pathname);setTimeout(()=>alert('Stripe sandbox checkout was cancelled. No money was charged.'),100);return;}
   if(result!=='success')return;
   const sessionId=params.get('session_id');
-  if(!sessionId)return;
-  if(!authSession?.accessToken)return;
+  if(!sessionId||!authSession?.accessToken)return;
   try{
     const response=await fetch('/api/apply-vault-payment',{method:'POST',headers:authHeaders(),body:JSON.stringify({sessionId})});
     const data=await response.json();
@@ -172,8 +171,6 @@ async function handleVaultPaymentReturn(){
     setTimeout(()=>alert(`Stripe payment could not be applied: ${error.message}`),100);
   }
 }
-const stripeResult=new URLSearchParams(location.search).get('stripe_test');
-if(stripeResult==='success'){setTimeout(()=>alert('Stripe sandbox payment succeeded. No real money was charged. This standalone test payment is not added to a vault.'),100);history.replaceState({},'',location.pathname);}else if(stripeResult==='cancelled'){setTimeout(()=>alert('Stripe sandbox checkout was cancelled. No money was charged.'),100);history.replaceState({},'',location.pathname);}
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 render();
