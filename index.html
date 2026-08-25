@@ -7,7 +7,7 @@
   <meta name="description" content="SaveMoney — private date-locked savings goals." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
   <title>SaveMoney</title>
 </head>
 <body>
@@ -42,6 +42,15 @@
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
+
+    <section class="sectionHead paymentSectionHead"><div><p class="eyebrow">FUNDING</p><h2>Payment methods</h2></div></section>
+    <section class="card paymentMethodsCard">
+      <div class="paymentMethodsIntro">
+        <div><h3>Saved payment information</h3><p class="muted">Cards are stored securely by Stripe and bank details are handled by the banking provider. SaveMoney only shows masked information.</p></div>
+        <div class="paymentMethodActions"><button id="addCardBtn" class="primary">Add debit card</button><button id="connectBankBtn" class="secondary">Connect bank account</button></div>
+      </div>
+      <div id="paymentMethodList" class="paymentMethodList"><div class="paymentMethodEmpty">Loading payment methods…</div></div>
+    </section>
 
     <section class="card bankCard" id="dwollaSetupCard">
       <div>
@@ -82,10 +91,23 @@
     </form>
   </dialog>
 
+  <dialog id="cardSetupDialog">
+    <form id="cardSetupForm" class="dialogCard">
+      <div class="dialogHead"><div><p class="eyebrow">STRIPE SECURE FIELD</p><h2>Add a debit card</h2></div><button id="closeCardSetupBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
+      <p class="muted">Enter your card here. The card number and security code go directly to Stripe and are never stored in SaveMoney or Supabase.</p>
+      <div id="stripeCardElement" class="stripeCardElement"></div>
+      <p id="cardSetupError" class="loginError" hidden></p>
+      <div class="secureCardNote">🔒 Stripe securely handles the full card details. SaveMoney receives only a payment-method ID and masked card information.</div>
+      <button id="saveCardBtn" class="primary wide" type="submit">Save card</button>
+    </form>
+  </dialog>
+
   <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
+  <script src="https://js.stripe.com/v3/" defer></script>
   <script src="app.js?v=9" defer></script>
   <script src="dwolla-bank-verify.js?v=1" defer></script>
   <script src="dwolla-transfer-test.js?v=3" defer></script>
+  <script src="payment-methods.js?v=1" defer></script>
 </body>
 </html>
