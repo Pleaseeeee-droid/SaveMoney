@@ -38,7 +38,7 @@
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. Card deposits use Stripe test payments; bank deposits use Dwolla Sandbox. No real bank custody is connected yet.</section>
+    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. Stripe deposits are test payments; Dwolla is connected separately for sandbox bank/balance transfers. No real bank custody is connected yet.</section>
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
@@ -62,8 +62,12 @@
         <label class="autoPayToggle"><input id="autoPayEnabled" type="checkbox" checked /><span>Enable auto-pay</span></label>
         <button class="primary" type="submit">Save auto-pay</button>
       </form>
+      <div class="autoPayControls">
+        <button id="toggleAutoPayBtn" class="secondary" type="button" hidden>Pause auto-pay</button>
+        <button id="removeAutoPayBtn" class="dangerGhost" type="button" hidden>Remove auto-pay</button>
+      </div>
       <p id="autoPaySummary" class="muted autoPaySummary">No auto-pay schedule saved.</p>
-      <p class="autoPayNote">Sandbox behavior: the schedule runs when SaveMoney is open on the selected day. A background server scheduler and final recurring-payment authorization will be required before real-money launch.</p>
+      <p class="autoPayNote">Sandbox schedule controls are saved in SaveMoney. Background execution is being moved to the server so it can run even when the app is closed.</p>
     </section>
 
     <section class="card bankCard" id="dwollaSetupCard">
@@ -90,6 +94,6 @@
   <script src="dwolla-bank-verify.js?v=1" defer></script>
   <script src="dwolla-transfer-test.js?v=3" defer></script>
   <script src="payment-methods.js?v=1" defer></script>
-  <script src="funding-options.js?v=1" defer></script>
+  <script src="funding-options.js?v=2" defer></script>
 </body>
 </html>
