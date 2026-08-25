@@ -16,6 +16,8 @@ export default async function handler(req, res) {
     body.set('mode', 'payment');
     body.set('success_url', `${origin}/?stripe_test=success`);
     body.set('cancel_url', `${origin}/?stripe_test=cancelled`);
+    body.set('managed_payments[enabled]', 'false');
+    body.set('payment_method_types[0]', 'card');
     body.set('line_items[0][quantity]', '1');
     body.set('line_items[0][price_data][currency]', 'usd');
     body.set('line_items[0][price_data][unit_amount]', '500');
