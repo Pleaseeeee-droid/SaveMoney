@@ -30,12 +30,30 @@ async function loadVaults(){
   }
 }
 
+async function loadDwollaCustomerStatus(){
+  const btn=$('#dwollaSetupBtn'),title=$('#dwollaSetupTitle'),text=$('#dwollaSetupText');
+  if(!btn||!title||!text||!authSession?.accessToken)return;
+  try{
+    const r=await fetch('/api/dwolla-customer',{headers:{Authorization:`Bearer ${authSession.accessToken}`}});
+    const data=await r.json();
+    if(!r.ok||!data.ok)return;
+    if(data.exists){
+      const status=data.customer?.status||'unknown';
+      title.textContent='Dwolla test banking profile ready';
+      text.textContent=`Personal sandbox customer status: ${status}. No real identity data or money is being used.`;
+      btn.textContent=status==='verified'?'Verified ✓':`Status: ${status}`;
+      btn.disabled=true;
+    }
+  }catch{}
+}
+
 function setSignedIn(session){
   authSession=session;
   localStorage.setItem(AUTH_SESSION_KEY,JSON.stringify(session));
   $('#authScreen').hidden=true;
   $('#appShell').hidden=false;
   loadVaults();
+  loadDwollaCustomerStatus();
 }
 function setSignedOut(){
   authSession=null;vaults=[];
@@ -115,6 +133,25 @@ function openAction(id,type){
 $('#newVaultBtn').onclick=()=>{const d=new Date();d.setDate(d.getDate()+1);$('#vaultDate').min=d.toISOString().slice(0,10);$('#vaultDate').value=d.toISOString().slice(0,10);$('#vaultDialog').showModal();};
 $('#closeDialogBtn').onclick=()=>$('#vaultDialog').close();
 $('#closeActionBtn').onclick=()=>$('#actionDialog').close();
+
+$('#dwollaSetupBtn').onclick=async()=>{
+  const btn=$('#dwollaSetupBtn'),title=$('#dwollaSetupTitle'),text=$('#dwollaSetupText');
+  btn.disabled=true;btn.textContent='Creating…';
+  try{
+    const r=await fetch('/api/dwolla-customer',{method:'POST',headers:authHeaders()});
+    const data=await r.json();
+    if(!r.ok||!data.ok)throw new Error(data.error||'Could not create Dwolla sandbox customer.');
+    const status=data.customer?.status||'unknown';
+    title.textContent='Dwolla test banking profile ready';
+    text.textContent=`Personal sandbox customer status: ${status}. No real identity data or money is being used.`;
+    btn.textContent=status==='verified'?'Verified ✓':`Status: ${status}`;
+    btn.disabled=true;
+    alert(`Dwolla sandbox customer created. Status: ${status}. No real identity information or money was used.`);
+  }catch(err){
+    alert(err.message);
+    btn.disabled=false;btn.textContent='Create test customer';
+  }
+};
 
 $('#vaultForm').addEventListener('submit',async e=>{
   e.preventDefault();
