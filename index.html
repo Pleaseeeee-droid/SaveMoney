@@ -4,20 +4,43 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1220" />
-  <meta name="description" content="SaveMoney — date-locked savings goals." />
+  <meta name="description" content="SaveMoney — private date-locked savings goals." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=5" />
   <title>SaveMoney</title>
 </head>
 <body>
-  <main class="shell">
+  <section id="authScreen" class="authScreen">
+    <div class="authCard">
+      <div class="authMark">$</div>
+      <p class="eyebrow">PRIVATE ACCESS</p>
+      <h1>SaveMoney</h1>
+      <p class="muted">Sign in to your personal savings vault.</p>
+      <form id="loginForm" class="authForm">
+        <label>Email
+          <input id="loginEmail" type="email" autocomplete="username" required />
+        </label>
+        <label>Password
+          <input id="loginPassword" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="loginError" class="loginError" hidden></p>
+        <button id="loginBtn" class="primary wide" type="submit">Sign in</button>
+      </form>
+      <p class="authNote">Only the Supabase account you created can access your vault dashboard.</p>
+    </div>
+  </section>
+
+  <main id="appShell" class="shell" hidden>
     <header class="topbar">
       <div>
         <p class="eyebrow">PRIVATE SAVINGS VAULT</p>
         <h1>SaveMoney</h1>
       </div>
-      <span id="modeBadge" class="badge">Demo mode</span>
+      <div class="accountActions">
+        <span id="modeBadge" class="badge">Sandbox</span>
+        <button id="signOutBtn" class="ghost smallBtn">Sign out</button>
+      </div>
     </header>
 
     <section class="hero card">
@@ -30,7 +53,7 @@
     </section>
 
     <section class="notice">
-      <strong>Hard-lock behavior:</strong> this build blocks withdrawals in the app until each vault's unlock date. Real bank custody is not connected yet, so do not treat the demo balance as actual money.
+      <strong>Sandbox:</strong> Stripe deposits are test payments. Real bank custody is not connected yet.
     </section>
 
     <section class="sectionHead">
@@ -47,7 +70,7 @@
       <div>
         <p class="eyebrow">STRIPE SANDBOX</p>
         <h2>Test the payment connection</h2>
-        <p class="muted">This creates a $5 Stripe test checkout. No real money will move, and it does not yet add money to a vault.</p>
+        <p class="muted">Creates a $5 Stripe sandbox checkout. No real money moves.</p>
       </div>
       <button id="connectBankBtn" class="secondary">Test $5 deposit</button>
     </section>
@@ -55,75 +78,29 @@
 
   <dialog id="vaultDialog">
     <form id="vaultForm" method="dialog" class="dialogCard">
-      <div class="dialogHead">
-        <div>
-          <p class="eyebrow">NEW SAVINGS VAULT</p>
-          <h2>Lock money away</h2>
-        </div>
-        <button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button>
-      </div>
-
-      <label>Vault name
-        <input id="vaultName" maxlength="40" placeholder="Emergency fund" required />
-      </label>
-      <label>Goal amount
-        <div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div>
-      </label>
-      <label>Unlock date
-        <input id="vaultDate" type="date" required />
-      </label>
-      <label>Starting deposit
-        <div class="moneyInput"><span>$</span><input id="vaultDeposit" type="number" min="0" step="0.01" inputmode="decimal" value="0" /></div>
-      </label>
-
-      <div class="lockWarning">
-        Once created, this vault's unlock date cannot be moved earlier in the app.
-      </div>
-
+      <div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Lock money away</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
+      <label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label>
+      <label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label>
+      <label>Unlock date<input id="vaultDate" type="date" required /></label>
+      <label>Starting deposit<div class="moneyInput"><span>$</span><input id="vaultDeposit" type="number" min="0" step="0.01" inputmode="decimal" value="0" /></div></label>
+      <div class="lockWarning">Once created, this vault's unlock date cannot be moved earlier in the app.</div>
       <button class="primary wide" type="submit">Create locked vault</button>
     </form>
   </dialog>
 
   <dialog id="actionDialog">
     <form id="actionForm" method="dialog" class="dialogCard">
-      <div class="dialogHead">
-        <div>
-          <p id="actionEyebrow" class="eyebrow">VAULT ACTION</p>
-          <h2 id="actionTitle">Add money</h2>
-        </div>
-        <button id="closeActionBtn" type="button" class="iconBtn" aria-label="Close">×</button>
-      </div>
+      <div class="dialogHead"><div><p id="actionEyebrow" class="eyebrow">VAULT ACTION</p><h2 id="actionTitle">Add money</h2></div><button id="closeActionBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
       <p id="actionDescription" class="muted"></p>
-      <label>Amount
-        <div class="moneyInput"><span>$</span><input id="actionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></div>
-      </label>
+      <label>Amount<div class="moneyInput"><span>$</span><input id="actionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></div></label>
       <button id="actionSubmit" class="primary wide" type="submit">Continue</button>
     </form>
   </dialog>
 
-  <dialog id="infoDialog">
-    <div class="dialogCard">
-      <div class="dialogHead">
-        <div>
-          <p class="eyebrow">STRIPE SANDBOX</p>
-          <h2 id="infoTitle">Starting test checkout</h2>
-        </div>
-        <button id="closeInfoBtn" type="button" class="iconBtn" aria-label="Close">×</button>
-      </div>
-      <p id="infoText">SaveMoney is creating a Stripe sandbox checkout session.</p>
-      <p class="muted">No real money will be charged.</p>
-      <button id="dismissInfoBtn" class="primary wide">Close</button>
-    </div>
-  </dialog>
+  <dialog id="infoDialog"><div class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">STRIPE SANDBOX</p><h2 id="infoTitle">Starting test checkout</h2></div><button id="closeInfoBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><p id="infoText">SaveMoney is creating a Stripe sandbox checkout session.</p><p class="muted">No real money will be charged.</p><button id="dismissInfoBtn" class="primary wide">Close</button></div></dialog>
 
-  <template id="emptyTemplate">
-    <section class="empty card">
-      <div class="emptyIcon">🔒</div>
-      <h3>No vaults yet</h3>
-      <p class="muted">Create one, choose your target and unlock date, then add deposits over time.</p>
-    </section>
-  </template>
+  <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one, choose your target and unlock date, then add deposits over time.</p></section></template>
 
-  <script src="app.js?v=4" defer></script>
+  <script src="app.js?v=5" defer></script>
 </body>
 </html>
