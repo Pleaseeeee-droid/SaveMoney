@@ -1,6 +1,5 @@
-import { BrowserProvider, JsonRpcProvider, Contract, formatUnits, parseUnits } from 'https://cdn.jsdelivr.net/npm/ethers@6.13.5/+esm';
-
-(()=>{
+(async()=>{
+  const { BrowserProvider, JsonRpcProvider, Contract, formatUnits, parseUnits } = await import('https://cdn.jsdelivr.net/npm/ethers@6.13.5/+esm');
   const style=document.createElement('link');style.rel='stylesheet';style.href='blockchain-vault.css?v=1';document.head.appendChild(style);
   const $=s=>document.querySelector(s);
   const CHAIN_ID='0xaa36a7';
@@ -157,4 +156,8 @@ import { BrowserProvider, JsonRpcProvider, Contract, formatUnits, parseUnits } f
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
-})();
+})().catch(err=>{
+  const el=document.querySelector('#chainStatus');
+  if(el){el.textContent=`Blockchain module failed to load: ${err.message}`;el.className='chainStatus error';}
+  console.error(err);
+});
