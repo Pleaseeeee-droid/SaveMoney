@@ -42,8 +42,6 @@
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
-
-    <section class="card bankCard"><div><p class="eyebrow">STRIPE SANDBOX</p><h2>Test the payment connection</h2><p class="muted">Creates a $5 Stripe sandbox checkout. No real money moves.</p></div><button id="connectBankBtn" class="secondary">Test $5 deposit</button></section>
   </main>
 
   <dialog id="vaultDialog">
@@ -66,10 +64,8 @@
     </form>
   </dialog>
 
-  <dialog id="infoDialog"><div class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">STRIPE SANDBOX</p><h2 id="infoTitle">Starting test checkout</h2></div><button id="closeInfoBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><p id="infoText">SaveMoney is creating a Stripe sandbox checkout session.</p><p class="muted">No real money will be charged.</p><button id="dismissInfoBtn" class="primary wide">Close</button></div></dialog>
-
   <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
-  <script src="app.js?v=7" defer></script>
+  <script src="app.js?v=8" defer></script>
 </body>
 </html>
