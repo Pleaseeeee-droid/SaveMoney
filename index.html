@@ -7,7 +7,7 @@
   <meta name="description" content="SaveMoney — private date-locked savings goals." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=10" />
   <title>SaveMoney</title>
 </head>
 <body>
@@ -38,10 +38,39 @@
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. Stripe deposits are test payments; Dwolla is connected separately for sandbox bank/balance transfers. No real bank custody is connected yet.</section>
+    <section class="notice"><strong>Sandbox:</strong> the normal SaveMoney vault ledger is still test-only. A separate Sepolia hard-lock prototype is now connected below so you can test the blockchain lock directly inside SaveMoney.</section>
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
+
+    <section class="sectionHead chainSectionHead"><div><p class="eyebrow">HARD-LOCK PROTOTYPE</p><h2>Blockchain vault</h2></div><span id="chainLockBadge" class="lockPill">Checking…</span></section>
+    <section class="card chainCard">
+      <div class="chainTop">
+        <div>
+          <h3>Sepolia locked vault</h3>
+          <p class="muted">This is the same smart-contract vault you tested in Remix. The contract—not the SaveMoney interface—decides whether a withdrawal is allowed.</p>
+        </div>
+        <div class="chainTopActions"><button id="chainConnectBtn" class="primary" type="button">Connect MetaMask</button><button id="chainRefreshBtn" class="ghost" type="button">Refresh</button></div>
+      </div>
+      <div class="chainBalanceRow">
+        <div><span>Locked on-chain</span><strong id="chainVaultBalance">Loading…</strong></div>
+        <div><span>Your test wallet</span><strong id="chainWalletBalance">Connect MetaMask</strong></div>
+      </div>
+      <div class="chainDetails">
+        <div><span>Unlock time</span><strong id="chainUnlockTime">Loading…</strong></div>
+        <div><span>Vault</span><strong id="chainVaultAddress">—</strong></div>
+        <div><span>Token</span><strong id="chainTokenAddress">—</strong></div>
+        <div><span>Beneficiary</span><strong id="chainBeneficiary">—</strong></div>
+      </div>
+      <div class="chainActions">
+        <label>Fake USDC to add<div class="moneyInput"><span>$</span><input id="chainDepositAmount" type="number" min="0.01" step="0.01" placeholder="5.00" inputmode="decimal" /></div></label>
+        <button id="chainDepositBtn" class="primary" type="button">Add test USDC</button>
+        <button id="chainWithdrawBtn" class="secondary" type="button" disabled>Withdrawal locked</button>
+        <button id="chainExplorerLink" class="ghost" type="button">View on explorer</button>
+      </div>
+      <p id="chainStatus" class="chainStatus">Reading the Sepolia vault…</p>
+      <p class="autoPayNote">Testnet only. mUSDC and SepoliaETH have no cash value. Do not send real tokens to this test contract.</p>
+    </section>
 
     <section class="sectionHead paymentSectionHead"><div><p class="eyebrow">FUNDING</p><h2>Payment methods</h2></div></section>
     <section class="card paymentMethodsCard">
@@ -76,12 +105,12 @@
     </section>
 
     <section class="card bankCard" id="dwollaTransferTestCard">
-      <div><p class="eyebrow">DWOLLA SANDBOX</p><h2>Test bank → Dwolla Balance</h2><p class="muted">Moves $1.00 of sandbox funds from SaveMoney Test Checking into the verified customer's Dwolla Balance. No real money moves.</p></div>
+      <div><p class="eyebrow">DWOLLA SANDBOX</p><h2>Test bank → Dwolla Balance</h2><p class="muted">Moves sandbox funds from SaveMoney Test Checking into the verified customer's Dwolla Balance. No real money moves.</p></div>
       <button id="dwollaTransferTestBtn" class="secondary">Test $1 transfer</button>
     </section>
   </main>
 
-  <dialog id="vaultDialog"><form id="vaultForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Create a savings goal</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label><label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label><label>Unlock date<input id="vaultDate" type="date" required /></label><div class="lockWarning">New vaults start at $0. Add money by debit card or connected bank account after creating the vault.</div><button class="primary wide" type="submit">Create locked vault</button></form></dialog>
+  <dialog id="vaultDialog"><form id="vaultForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Create a savings goal</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label><label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label><label>Unlock date<input id="vaultDate" type="date" required /></label><div class="lockWarning">New database vaults start at $0. The blockchain hard-lock integration is currently being tested separately below.</div><button class="primary wide" type="submit">Create locked vault</button></form></dialog>
 
   <dialog id="actionDialog"><form id="actionForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p id="actionEyebrow" class="eyebrow">VAULT ACTION</p><h2 id="actionTitle">Add money</h2></div><button id="closeActionBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><p id="actionDescription" class="muted"></p><label id="fundingSourceRow">Pay from<select id="fundingSource"><option value="card">Debit card</option><option value="bank">Bank account</option></select></label><label>Amount<div class="moneyInput"><span>$</span><input id="actionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></div></label><button id="actionSubmit" class="primary wide" type="submit">Continue</button></form></dialog>
 
@@ -90,10 +119,12 @@
   <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
   <script src="https://js.stripe.com/v3/" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.min.js" defer></script>
   <script src="app.js?v=9" defer></script>
   <script src="dwolla-bank-verify.js?v=1" defer></script>
   <script src="dwolla-transfer-test.js?v=3" defer></script>
   <script src="payment-methods.js?v=1" defer></script>
   <script src="funding-options.js?v=2" defer></script>
+  <script src="blockchain-vault.js?v=1" defer></script>
 </body>
 </html>
