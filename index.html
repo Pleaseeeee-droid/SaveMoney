@@ -7,7 +7,7 @@
   <meta name="description" content="SaveMoney — private date-locked savings goals." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=6" />
   <title>SaveMoney</title>
 </head>
 <body>
@@ -18,72 +18,41 @@
       <h1>SaveMoney</h1>
       <p class="muted">Sign in to your personal savings vault.</p>
       <form id="loginForm" class="authForm">
-        <label>Email
-          <input id="loginEmail" type="email" autocomplete="username" required />
-        </label>
-        <label>Password
-          <input id="loginPassword" type="password" autocomplete="current-password" required />
-        </label>
+        <label>Email<input id="loginEmail" type="email" autocomplete="username" required /></label>
+        <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required /></label>
         <p id="loginError" class="loginError" hidden></p>
         <button id="loginBtn" class="primary wide" type="submit">Sign in</button>
       </form>
-      <p class="authNote">Only the Supabase account you created can access your vault dashboard.</p>
+      <p class="authNote">Your vault data is tied to your signed-in Supabase account.</p>
     </div>
   </section>
 
   <main id="appShell" class="shell" hidden>
     <header class="topbar">
-      <div>
-        <p class="eyebrow">PRIVATE SAVINGS VAULT</p>
-        <h1>SaveMoney</h1>
-      </div>
-      <div class="accountActions">
-        <span id="modeBadge" class="badge">Sandbox</span>
-        <button id="signOutBtn" class="ghost smallBtn">Sign out</button>
-      </div>
+      <div><p class="eyebrow">PRIVATE SAVINGS VAULT</p><h1>SaveMoney</h1></div>
+      <div class="accountActions"><span id="modeBadge" class="badge">Sandbox</span><button id="signOutBtn" class="ghost smallBtn">Sign out</button></div>
     </header>
 
     <section class="hero card">
-      <div>
-        <p class="muted">Locked balance</p>
-        <div id="totalBalance" class="balance">$0.00</div>
-        <p id="nextUnlock" class="muted">No active vaults yet.</p>
-      </div>
+      <div><p class="muted">Locked balance</p><div id="totalBalance" class="balance">$0.00</div><p id="nextUnlock" class="muted">No active vaults yet.</p></div>
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice">
-      <strong>Sandbox:</strong> Stripe deposits are test payments. Real bank custody is not connected yet.
-    </section>
+    <section class="notice"><strong>Sandbox:</strong> vaults are now stored in your private database. Stripe deposits are still test payments; no real bank custody is connected yet.</section>
 
-    <section class="sectionHead">
-      <div>
-        <p class="eyebrow">YOUR VAULTS</p>
-        <h2>Savings goals</h2>
-      </div>
-      <button id="exportBtn" class="ghost">Export</button>
-    </section>
-
+    <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
 
-    <section class="card bankCard">
-      <div>
-        <p class="eyebrow">STRIPE SANDBOX</p>
-        <h2>Test the payment connection</h2>
-        <p class="muted">Creates a $5 Stripe sandbox checkout. No real money moves.</p>
-      </div>
-      <button id="connectBankBtn" class="secondary">Test $5 deposit</button>
-    </section>
+    <section class="card bankCard"><div><p class="eyebrow">STRIPE SANDBOX</p><h2>Test the payment connection</h2><p class="muted">Creates a $5 Stripe sandbox checkout. No real money moves.</p></div><button id="connectBankBtn" class="secondary">Test $5 deposit</button></section>
   </main>
 
   <dialog id="vaultDialog">
     <form id="vaultForm" method="dialog" class="dialogCard">
-      <div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Lock money away</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
+      <div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Create a savings goal</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
       <label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label>
       <label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label>
       <label>Unlock date<input id="vaultDate" type="date" required /></label>
-      <label>Starting deposit<div class="moneyInput"><span>$</span><input id="vaultDeposit" type="number" min="0" step="0.01" inputmode="decimal" value="0" /></div></label>
-      <div class="lockWarning">Once created, this vault's unlock date cannot be moved earlier in the app.</div>
+      <div class="lockWarning">New vaults start at $0. Add money through Stripe Sandbox after creating the vault.</div>
       <button class="primary wide" type="submit">Create locked vault</button>
     </form>
   </dialog>
@@ -99,8 +68,8 @@
 
   <dialog id="infoDialog"><div class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">STRIPE SANDBOX</p><h2 id="infoTitle">Starting test checkout</h2></div><button id="closeInfoBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><p id="infoText">SaveMoney is creating a Stripe sandbox checkout session.</p><p class="muted">No real money will be charged.</p><button id="dismissInfoBtn" class="primary wide">Close</button></div></dialog>
 
-  <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one, choose your target and unlock date, then add deposits over time.</p></section></template>
+  <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
-  <script src="app.js?v=5" defer></script>
+  <script src="app.js?v=6" defer></script>
 </body>
 </html>
