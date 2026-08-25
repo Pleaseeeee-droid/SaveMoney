@@ -1,4 +1,3 @@
-const APPLIED_PAYMENTS_KEY='savemoney.appliedStripeSessions.v1';
 const AUTH_SESSION_KEY='savemoney.auth.v1';
 const $=s=>document.querySelector(s);
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n||0);
@@ -6,13 +5,11 @@ const today=()=>new Date(new Date().toDateString());
 const parseDate=s=>new Date(`${s}T00:00:00`);
 const daysLeft=s=>Math.ceil((parseDate(s)-today())/86400000);
 let vaults=[];
-let appliedPayments=JSON.parse(localStorage.getItem(APPLIED_PAYMENTS_KEY)||'[]');
 let authSession=JSON.parse(localStorage.getItem(AUTH_SESSION_KEY)||'null');
 let activeAction=null;
 
 const normalizeVault=v=>({id:v.id,name:v.name,goal:Number(v.goal_amount??v.goal??0),balance:Number(v.balance||0),unlockDate:v.unlock_date??v.unlockDate,createdAt:v.created_at??v.createdAt});
 function authHeaders(extra={}){return {'Content-Type':'application/json',Authorization:`Bearer ${authSession?.accessToken||''}`,...extra};}
-function saveApplied(){localStorage.setItem(APPLIED_PAYMENTS_KEY,JSON.stringify(appliedPayments));}
 function total(){return vaults.reduce((a,v)=>a+Number(v.balance||0),0)}
 function unlocked(v){return today()>=parseDate(v.unlockDate)}
 function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -37,7 +34,7 @@ async function updateVaultBalance(vault,balance){
   const data=await r.json();
   if(!r.ok)throw new Error(data.error||'Could not update vault.');
   const updated=normalizeVault(data.vault);
-  const i=vaults.findIndex(v=>v.id===updated.id); if(i>=0)vaults[i]=updated;
+  const i=vaults.findIndex(v=>v.id===updated.id);if(i>=0)vaults[i]=updated;
   render();
   return updated;
 }
@@ -50,7 +47,7 @@ function setSignedIn(session){
   loadVaults();
 }
 function setSignedOut(){
-  authSession=null; vaults=[];
+  authSession=null;vaults=[];
   localStorage.removeItem(AUTH_SESSION_KEY);
   $('#appShell').hidden=true;
   $('#authScreen').hidden=false;
@@ -66,9 +63,9 @@ async function refreshSession(){
   }catch{return false;}
 }
 async function initializeAuth(){
-  $('#authScreen').hidden=false; $('#appShell').hidden=true;
-  if(authSession&&await refreshSession())return;
-  setSignedOut();
+  $('#authScreen').hidden=false;$('#appShell').hidden=true;
+  if(authSession&&await refreshSession())return true;
+  setSignedOut();return false;
 }
 
 $('#loginForm').addEventListener('submit',async e=>{
@@ -79,7 +76,8 @@ $('#loginForm').addEventListener('submit',async e=>{
     const response=await fetch('/api/auth-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
     const data=await response.json();
     if(!response.ok||!data.ok)throw new Error(data.error||'Sign in failed.');
-    setSignedIn(data); $('#loginPassword').value='';
+    setSignedIn(data);$('#loginPassword').value='';
+    await handleVaultPaymentReturn();
   }catch(err){error.textContent=err.message;error.hidden=false;}
   finally{btn.disabled=false;btn.textContent='Sign in';}
 });
@@ -149,7 +147,7 @@ $('#actionForm').addEventListener('submit',async e=>{
   }
   const submit=$('#actionSubmit');submit.disabled=true;submit.textContent='Opening Stripe…';
   try{
-    const response=await fetch('/api/create-vault-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vaultId:v.id,vaultName:v.name,amount})});
+    const response=await fetch('/api/create-vault-checkout',{method:'POST',headers:authHeaders(),body:JSON.stringify({vaultId:v.id,amount})});
     const data=await response.json();if(!response.ok||!data.url)throw new Error(data.error||'Could not create vault checkout.');window.location.href=data.url;
   }catch(error){alert(error.message);submit.disabled=false;submit.textContent='Continue to Stripe';}
 });
@@ -160,21 +158,23 @@ async function handleVaultPaymentReturn(){
   const params=new URLSearchParams(location.search),result=params.get('vault_payment');
   if(result==='cancelled'){history.replaceState({},'',location.pathname);setTimeout(()=>alert('Stripe sandbox checkout was cancelled. No money was charged.'),100);return;}
   if(result!=='success')return;
-  const sessionId=params.get('session_id');history.replaceState({},'',location.pathname);if(!sessionId)return;
-  if(appliedPayments.includes(sessionId)){setTimeout(()=>alert('This Stripe sandbox payment was already added to the vault on this device.'),100);return;}
+  const sessionId=params.get('session_id');
+  if(!sessionId)return;
+  if(!authSession?.accessToken)return;
   try{
-    const response=await fetch(`/api/verify-vault-payment?session_id=${encodeURIComponent(sessionId)}`),data=await response.json();
-    if(!response.ok||!data.ok)throw new Error(data.error||'Could not verify payment.');
-    if(!vaults.length)await loadVaults();
-    const vault=vaults.find(v=>v.id===data.vaultId);if(!vault)throw new Error('Payment succeeded, but the matching vault could not be found.');
-    await updateVaultBalance(vault,Number(vault.balance||0)+Number(data.amount||0));
-    appliedPayments.push(sessionId);saveApplied();
-    setTimeout(()=>alert(`${money(data.amount)} Stripe sandbox deposit confirmed and saved to “${vault.name}”. No real money was charged.`),100);
-  }catch(error){setTimeout(()=>alert(`Stripe payment return could not be applied: ${error.message}`),100);}
+    const response=await fetch('/api/apply-vault-payment',{method:'POST',headers:authHeaders(),body:JSON.stringify({sessionId})});
+    const data=await response.json();
+    if(!response.ok||!data.ok)throw new Error(data.error||'Could not apply payment.');
+    history.replaceState({},'',location.pathname);
+    await loadVaults();
+    setTimeout(()=>alert(`${money(data.amount)} Stripe sandbox deposit confirmed and saved to your vault. It is now synced across your devices.`),100);
+  }catch(error){
+    setTimeout(()=>alert(`Stripe payment could not be applied: ${error.message}`),100);
+  }
 }
 const stripeResult=new URLSearchParams(location.search).get('stripe_test');
 if(stripeResult==='success'){setTimeout(()=>alert('Stripe sandbox payment succeeded. No real money was charged. This standalone test payment is not added to a vault.'),100);history.replaceState({},'',location.pathname);}else if(stripeResult==='cancelled'){setTimeout(()=>alert('Stripe sandbox checkout was cancelled. No money was charged.'),100);history.replaceState({},'',location.pathname);}
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 render();
-initializeAuth().then(()=>handleVaultPaymentReturn());
+initializeAuth().then(signedIn=>{if(signedIn)handleVaultPaymentReturn();});
