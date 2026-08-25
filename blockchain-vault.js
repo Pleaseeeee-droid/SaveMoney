@@ -1,3 +1,5 @@
+import { BrowserProvider, JsonRpcProvider, Contract, formatUnits, parseUnits } from 'https://cdn.jsdelivr.net/npm/ethers@6.13.5/+esm';
+
 (()=>{
   const style=document.createElement('link');style.rel='stylesheet';style.href='blockchain-vault.css?v=1';document.head.appendChild(style);
   const $=s=>document.querySelector(s);
@@ -47,13 +49,12 @@
   }
 
   async function connect(){
-    if(typeof window.ethers==='undefined')throw new Error('Blockchain library did not load. Refresh SaveMoney and try again.');
     if(!window.ethereum)throw new Error('Install or enable MetaMask first.');
     setBusy(true);setStatus('Connecting MetaMask…');
     try{
       await ensureSepolia();
       await window.ethereum.request({method:'eth_requestAccounts'});
-      provider=new ethers.BrowserProvider(window.ethereum);
+      provider=new BrowserProvider(window.ethereum);
       signer=await provider.getSigner();
       account=await signer.getAddress();
       const btn=$('#chainConnectBtn');if(btn)btn.textContent=`Connected ${short(account)}`;
@@ -66,22 +67,21 @@
     if(window.ethereum){
       try{
         const chain=await window.ethereum.request({method:'eth_chainId'});
-        if(chain===CHAIN_ID){provider=new ethers.BrowserProvider(window.ethereum);return provider;}
+        if(chain===CHAIN_ID){provider=new BrowserProvider(window.ethereum);return provider;}
       }catch{}
     }
-    return new ethers.JsonRpcProvider('https://rpc.sepolia.org');
+    return new JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com');
   }
 
   async function refresh(){
     try{
-      if(typeof window.ethers==='undefined')return;
       const p=await getReadProvider();
-      const vault=new ethers.Contract(VAULT_ADDRESS,VAULT_ABI,p);
+      const vault=new Contract(VAULT_ADDRESS,VAULT_ABI,p);
       const [rawBalance,rawUnlock,beneficiary,tokenAddress]=await Promise.all([
         vault.balance(),vault.unlockTime(),vault.beneficiary(),vault.token()
       ]);
       unlockTimestamp=Number(rawUnlock);
-      const balance=ethers.formatUnits(rawBalance,TOKEN_DECIMALS);
+      const balance=formatUnits(rawBalance,TOKEN_DECIMALS);
       $('#chainVaultBalance').textContent=`${fmt(balance)} mUSDC`;
       $('#chainVaultAddress').textContent=short(VAULT_ADDRESS);
       $('#chainTokenAddress').textContent=short(tokenAddress);
@@ -95,9 +95,9 @@
       $('#chainLockBadge').className=`lockPill ${locked?'':'unlocked'}`;
 
       if(account){
-        const token=new ethers.Contract(TOKEN_ADDRESS,TOKEN_ABI,p);
+        const token=new Contract(TOKEN_ADDRESS,TOKEN_ABI,p);
         const walletRaw=await token.balanceOf(account);
-        $('#chainWalletBalance').textContent=`${fmt(ethers.formatUnits(walletRaw,TOKEN_DECIMALS))} mUSDC`;
+        $('#chainWalletBalance').textContent=`${fmt(formatUnits(walletRaw,TOKEN_DECIMALS))} mUSDC`;
         setStatus(locked?'Connected to Sepolia. The contract itself is enforcing the lock.':'Connected to Sepolia. This test vault is now unlocked.','ok');
       }else{
         $('#chainWalletBalance').textContent='Connect MetaMask';
@@ -113,9 +113,9 @@
     if(!Number.isFinite(amount)||amount<=0){alert('Enter an amount greater than 0.');return;}
     if(!signer)await connect();
     if(Math.floor(Date.now()/1000)>=unlockTimestamp){alert('This test vault has already reached its unlock time, so it no longer accepts deposits.');return;}
-    const units=ethers.parseUnits(amount.toFixed(TOKEN_DECIMALS),TOKEN_DECIMALS);
-    const token=new ethers.Contract(TOKEN_ADDRESS,TOKEN_ABI,signer);
-    const vault=new ethers.Contract(VAULT_ADDRESS,VAULT_ABI,signer);
+    const units=parseUnits(amount.toFixed(TOKEN_DECIMALS),TOKEN_DECIMALS);
+    const token=new Contract(TOKEN_ADDRESS,TOKEN_ABI,signer);
+    const vault=new Contract(VAULT_ADDRESS,VAULT_ABI,signer);
     const btn=$('#chainDepositBtn');setBusy(true);
     try{
       btn.textContent='1/2 Approving…';setStatus('MetaMask will ask you to approve mUSDC for this vault.');
@@ -133,7 +133,7 @@
 
   async function withdraw(){
     if(!signer)await connect();
-    const vault=new ethers.Contract(VAULT_ADDRESS,VAULT_ABI,signer);
+    const vault=new Contract(VAULT_ADDRESS,VAULT_ABI,signer);
     setBusy(true);setStatus('Requesting withdrawal from the smart contract…');
     try{
       const tx=await vault.withdraw();await tx.wait();
