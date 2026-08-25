@@ -45,11 +45,11 @@
 
     <section class="card bankCard">
       <div>
-        <p class="eyebrow">BANK CONNECTION</p>
-        <h2>Debit / bank transfers</h2>
-        <p class="muted">The UI is ready for a live transfer provider. Production credentials and a compliant bank/transfer partner are required before real money can move.</p>
+        <p class="eyebrow">STRIPE SANDBOX</p>
+        <h2>Test the payment connection</h2>
+        <p class="muted">This creates a $5 Stripe test checkout. No real money will move, and it does not yet add money to a vault.</p>
       </div>
-      <button id="connectBankBtn" class="secondary">Connect account</button>
+      <button id="connectBankBtn" class="secondary">Test $5 deposit</button>
     </section>
   </main>
 
@@ -105,14 +105,14 @@
     <div class="dialogCard">
       <div class="dialogHead">
         <div>
-          <p class="eyebrow">LIVE MONEY SETUP</p>
-          <h2>Bank connection comes next</h2>
+          <p class="eyebrow">STRIPE SANDBOX</p>
+          <h2 id="infoTitle">Starting test checkout</h2>
         </div>
         <button id="closeInfoBtn" type="button" class="iconBtn" aria-label="Close">×</button>
       </div>
-      <p>This demo deliberately does not ask for card numbers. Real transfers must use a secure provider-hosted bank/card connection flow and a backend so credentials never live in this page.</p>
-      <p class="muted">The production version will replace this button with the provider's secure linking flow.</p>
-      <button id="dismissInfoBtn" class="primary wide">Got it</button>
+      <p id="infoText">SaveMoney is creating a Stripe sandbox checkout session.</p>
+      <p class="muted">No real money will be charged.</p>
+      <button id="dismissInfoBtn" class="primary wide">Close</button>
     </div>
   </dialog>
 
