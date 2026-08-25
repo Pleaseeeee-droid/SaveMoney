@@ -7,7 +7,7 @@
   <meta name="description" content="SaveMoney — private date-locked savings goals." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
   <title>SaveMoney</title>
 </head>
 <body>
@@ -38,7 +38,7 @@
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice"><strong>Sandbox:</strong> vaults are now stored in your private database. Stripe deposits are still test payments; no real bank custody is connected yet.</section>
+    <section class="notice"><strong>Sandbox:</strong> vaults are stored in your private database. Stripe deposits are test payments; no real bank custody is connected yet.</section>
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
@@ -70,6 +70,6 @@
 
   <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
-  <script src="app.js?v=6" defer></script>
+  <script src="app.js?v=7" defer></script>
 </body>
 </html>
