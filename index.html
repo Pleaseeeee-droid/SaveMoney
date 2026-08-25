@@ -42,6 +42,15 @@
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
+
+    <section class="card bankCard" id="dwollaSetupCard">
+      <div>
+        <p class="eyebrow">DWOLLA SANDBOX</p>
+        <h2 id="dwollaSetupTitle">Set up test banking profile</h2>
+        <p id="dwollaSetupText" class="muted">Creates a fake verified personal customer in Dwolla Sandbox. No real identity data or money is used.</p>
+      </div>
+      <button id="dwollaSetupBtn" class="secondary">Create test customer</button>
+    </section>
   </main>
 
   <dialog id="vaultDialog">
@@ -66,6 +75,6 @@
 
   <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
-  <script src="app.js?v=8" defer></script>
+  <script src="app.js?v=9" defer></script>
 </body>
 </html>
