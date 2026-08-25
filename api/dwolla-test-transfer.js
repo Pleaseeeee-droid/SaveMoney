@@ -57,6 +57,7 @@ function isBank(fs){
 function isBalance(fs){
   return fs?.type==='balance'||fs?.name==='Balance'||Boolean(fs?._links?.balance);
 }
+function cleanKey(value){return String(value||'').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,80);}
 
 export default async function handler(req,res){
   if(req.method!=='POST'){
@@ -71,6 +72,19 @@ export default async function handler(req,res){
     const user=await getSupabaseUser(saveMoneyToken);
     if(!user?.id)return res.status(401).json({error:'Invalid SaveMoney session.'});
 
+    const body=req.body||{};
+    const dollars=body.amount==null?1:Number(body.amount);
+    if(!Number.isFinite(dollars)||dollars<0.01||dollars>10000)return res.status(400).json({ok:false,error:'Enter an amount between $0.01 and $10,000.00.'});
+    const vaultId=typeof body.vaultId==='string'?body.vaultId:null;
+    const scheduleKey=cleanKey(body.scheduleKey);
+
+    if(vaultId){
+      const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_PUBLISHABLE_KEY;
+      const vr=await fetch(`${url}/rest/v1/vaults?id=eq.${encodeURIComponent(vaultId)}&select=id,name`,{headers:{apikey:key,Authorization:`Bearer ${saveMoneyToken}`}});
+      const rows=await vr.json();
+      if(!vr.ok||!Array.isArray(rows)||!rows.length)return res.status(404).json({ok:false,error:'Vault not found.'});
+    }
+
     const dToken=await dwollaToken();
     const customer=await findCustomer(dToken,user.id);
     if(!customer)return res.status(404).json({ok:false,error:'Create the Dwolla sandbox customer first.'});
@@ -81,20 +95,25 @@ export default async function handler(req,res){
     if(!bank)return res.status(400).json({ok:false,error:'Verify SaveMoney Test Checking first.'});
     if(!balance)return res.status(400).json({ok:false,error:'Dwolla Balance funding source was not found.'});
 
+    const stablePart=scheduleKey||`${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    const transferKey=`savemoney-${String(user.id).toLowerCase()}-${vaultId||'general'}-${stablePart}`.slice(0,240);
+    const correlationId=`vault-${vaultId||'general'}-${stablePart}`.slice(0,255);
+
     const transfer=await fetch('https://api-sandbox.dwolla.com/transfers',{
       method:'POST',
       headers:{
         Authorization:`Bearer ${dToken}`,
         Accept:'application/vnd.dwolla.v1.hal+json',
         'Content-Type':'application/vnd.dwolla.v1.hal+json',
-        'Idempotency-Key':`savemoney-${String(user.id).toLowerCase()}-bank-to-balance-1-v2`
+        'Idempotency-Key':transferKey
       },
       body:JSON.stringify({
         _links:{
           source:{href:`https://api-sandbox.dwolla.com/funding-sources/${bank.id}`},
           destination:{href:`https://api-sandbox.dwolla.com/funding-sources/${balance.id}`}
         },
-        amount:{currency:'USD',value:'1.00'}
+        amount:{currency:'USD',value:dollars.toFixed(2)},
+        correlationId
       })
     });
 
@@ -116,7 +135,7 @@ export default async function handler(req,res){
       }catch{}
     }
 
-    return res.status(201).json({ok:true,sandbox:true,amount:1,transferId,status});
+    return res.status(201).json({ok:true,sandbox:true,amount:dollars,vaultId,transferId,status,correlationId,credited:false});
   }catch(err){
     return res.status(500).json({ok:false,error:err.message||'Unable to create Dwolla sandbox transfer.'});
   }
