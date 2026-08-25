@@ -1,5 +1,3 @@
-const jsonHeaders={'Content-Type':'application/json'};
-
 function supabaseConfig(){
   const url=process.env.SUPABASE_URL;
   const key=process.env.SUPABASE_PUBLISHABLE_KEY;
@@ -41,7 +39,7 @@ export default async function handler(req,res){
       const {name,goalAmount,unlockDate}=req.body||{};
       const goal=Number(goalAmount);
       if(!String(name||'').trim()||!Number.isFinite(goal)||goal<=0||!/^\d{4}-\d{2}-\d{2}$/.test(String(unlockDate||'')))return res.status(400).json({error:'Valid vault name, goal, and unlock date are required.'});
-      const today=new Date(); today.setHours(0,0,0,0);
+      const today=new Date();today.setHours(0,0,0,0);
       const unlock=new Date(`${unlockDate}T00:00:00`);
       if(!(unlock>today))return res.status(400).json({error:'Unlock date must be after today.'});
       const r=await rest(url,key,token,'vaults',{
@@ -51,19 +49,6 @@ export default async function handler(req,res){
       const data=await r.json();
       if(!r.ok)return res.status(r.status).json({error:data?.message||'Could not create vault.'});
       return res.status(201).json({ok:true,vault:data[0]});
-    }
-
-    if(req.method==='PATCH'){
-      const {id,balance}=req.body||{};
-      const next=Number(balance);
-      if(!id||!Number.isFinite(next)||next<0)return res.status(400).json({error:'Valid vault and balance are required.'});
-      const r=await rest(url,key,token,`vaults?id=eq.${encodeURIComponent(id)}`,{
-        method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({balance:next})
-      });
-      const data=await r.json();
-      if(!r.ok)return res.status(r.status).json({error:data?.message||'Could not update vault.'});
-      if(!data.length)return res.status(404).json({error:'Vault not found.'});
-      return res.status(200).json({ok:true,vault:data[0]});
     }
 
     if(req.method==='DELETE'){
@@ -76,8 +61,8 @@ export default async function handler(req,res){
       return res.status(200).json({ok:true});
     }
 
-    res.setHeader('Allow','GET, POST, PATCH, DELETE');
-    return res.status(405).json({error:'Method not allowed'});
+    res.setHeader('Allow','GET, POST, DELETE');
+    return res.status(405).json({error:'Direct vault balance updates are disabled.'});
   }catch{
     return res.status(500).json({error:'Unable to reach the vault database.'});
   }
