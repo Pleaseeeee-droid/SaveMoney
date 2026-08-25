@@ -58,7 +58,7 @@
         <label>Vault<select id="autoPayVault" required></select></label>
         <label>Pay from<select id="autoPaySource"><option value="bank">Bank account</option><option value="card">Debit card</option></select></label>
         <label>Fixed amount<div class="moneyInput"><span>$</span><input id="autoPayAmount" type="number" min="0.50" step="0.01" placeholder="25.00" required /></div></label>
-        <label>Day each month<select id="autoPayDay">${Array.from({length:28},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></label>
+        <label>Day each month<select id="autoPayDay"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option></select></label>
         <label class="autoPayToggle"><input id="autoPayEnabled" type="checkbox" checked /><span>Enable auto-pay</span></label>
         <button class="primary" type="submit">Save auto-pay</button>
       </form>
@@ -67,55 +67,21 @@
     </section>
 
     <section class="card bankCard" id="dwollaSetupCard">
-      <div>
-        <p class="eyebrow">DWOLLA SANDBOX</p>
-        <h2 id="dwollaSetupTitle">Set up test banking profile</h2>
-        <p id="dwollaSetupText" class="muted">Creates a fake verified personal customer in Dwolla Sandbox. No real identity data or money is used.</p>
-      </div>
+      <div><p class="eyebrow">DWOLLA SANDBOX</p><h2 id="dwollaSetupTitle">Set up test banking profile</h2><p id="dwollaSetupText" class="muted">Creates a fake verified personal customer in Dwolla Sandbox. No real identity data or money is used.</p></div>
       <button id="dwollaSetupBtn" class="secondary">Create test customer</button>
     </section>
 
     <section class="card bankCard" id="dwollaTransferTestCard">
-      <div>
-        <p class="eyebrow">DWOLLA SANDBOX</p>
-        <h2>Test bank → Dwolla Balance</h2>
-        <p class="muted">Moves $1.00 of sandbox funds from SaveMoney Test Checking into the verified customer's Dwolla Balance. No real money moves.</p>
-      </div>
+      <div><p class="eyebrow">DWOLLA SANDBOX</p><h2>Test bank → Dwolla Balance</h2><p class="muted">Moves $1.00 of sandbox funds from SaveMoney Test Checking into the verified customer's Dwolla Balance. No real money moves.</p></div>
       <button id="dwollaTransferTestBtn" class="secondary">Test $1 transfer</button>
     </section>
   </main>
 
-  <dialog id="vaultDialog">
-    <form id="vaultForm" method="dialog" class="dialogCard">
-      <div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Create a savings goal</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
-      <label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label>
-      <label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label>
-      <label>Unlock date<input id="vaultDate" type="date" required /></label>
-      <div class="lockWarning">New vaults start at $0. Add money by debit card or connected bank account after creating the vault.</div>
-      <button class="primary wide" type="submit">Create locked vault</button>
-    </form>
-  </dialog>
+  <dialog id="vaultDialog"><form id="vaultForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Create a savings goal</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label><label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label><label>Unlock date<input id="vaultDate" type="date" required /></label><div class="lockWarning">New vaults start at $0. Add money by debit card or connected bank account after creating the vault.</div><button class="primary wide" type="submit">Create locked vault</button></form></dialog>
 
-  <dialog id="actionDialog">
-    <form id="actionForm" method="dialog" class="dialogCard">
-      <div class="dialogHead"><div><p id="actionEyebrow" class="eyebrow">VAULT ACTION</p><h2 id="actionTitle">Add money</h2></div><button id="closeActionBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
-      <p id="actionDescription" class="muted"></p>
-      <label id="fundingSourceRow">Pay from<select id="fundingSource"><option value="card">Debit card</option><option value="bank">Bank account</option></select></label>
-      <label>Amount<div class="moneyInput"><span>$</span><input id="actionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></div></label>
-      <button id="actionSubmit" class="primary wide" type="submit">Continue</button>
-    </form>
-  </dialog>
+  <dialog id="actionDialog"><form id="actionForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p id="actionEyebrow" class="eyebrow">VAULT ACTION</p><h2 id="actionTitle">Add money</h2></div><button id="closeActionBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><p id="actionDescription" class="muted"></p><label id="fundingSourceRow">Pay from<select id="fundingSource"><option value="card">Debit card</option><option value="bank">Bank account</option></select></label><label>Amount<div class="moneyInput"><span>$</span><input id="actionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></div></label><button id="actionSubmit" class="primary wide" type="submit">Continue</button></form></dialog>
 
-  <dialog id="cardSetupDialog">
-    <form id="cardSetupForm" class="dialogCard">
-      <div class="dialogHead"><div><p class="eyebrow">STRIPE SECURE FIELD</p><h2>Add a debit card</h2></div><button id="closeCardSetupBtn" type="button" class="iconBtn" aria-label="Close">×</button></div>
-      <p class="muted">Enter your card here. The card number and security code go directly to Stripe and are never stored in SaveMoney or Supabase.</p>
-      <div id="stripeCardElement" class="stripeCardElement"></div>
-      <p id="cardSetupError" class="loginError" hidden></p>
-      <div class="secureCardNote">🔒 Stripe securely handles the full card details. SaveMoney receives only a payment-method ID and masked card information.</div>
-      <button id="saveCardBtn" class="primary wide" type="submit">Save card</button>
-    </form>
-  </dialog>
+  <dialog id="cardSetupDialog"><form id="cardSetupForm" class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">STRIPE SECURE FIELD</p><h2>Add a debit card</h2></div><button id="closeCardSetupBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><p class="muted">Enter your card here. The card number and security code go directly to Stripe and are never stored in SaveMoney or Supabase.</p><div id="stripeCardElement" class="stripeCardElement"></div><p id="cardSetupError" class="loginError" hidden></p><div class="secureCardNote">🔒 Stripe securely handles the full card details. SaveMoney receives only a payment-method ID and masked card information.</div><button id="saveCardBtn" class="primary wide" type="submit">Save card</button></form></dialog>
 
   <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
