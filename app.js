@@ -22,14 +22,24 @@ function render(){
   const list=$('#vaultList'); list.innerHTML='';
   if(!vaults.length){list.append($('#emptyTemplate').content.cloneNode(true));return;}
   vaults.forEach(v=>{
-    const isUnlocked=unlocked(v), pct=Math.max(0,Math.min(100,(Number(v.balance)/Number(v.goal))*100));
+    const isUnlocked=unlocked(v), balance=Number(v.balance||0), pct=Math.max(0,Math.min(100,(balance/Number(v.goal))*100));
     const remaining=Math.max(0,daysLeft(v.unlockDate));
+    const canDelete=balance===0;
     const el=document.createElement('article'); el.className='vault card';
-    el.innerHTML=`<div class="vaultTop"><div><p class="eyebrow">${isUnlocked?'AVAILABLE':'LOCKED SAVINGS'}</p><h3>${escapeHtml(v.name)}</h3></div><span class="lockPill ${isUnlocked?'unlocked':''}">${isUnlocked?'Unlocked':'🔒 '+remaining+' day'+(remaining===1?'':'s')}</span></div><div class="vaultAmount">${money(v.balance)}</div><p class="muted">of ${money(v.goal)} goal</p><div class="progressTrack"><div class="progressBar" style="width:${pct}%"></div></div><div class="vaultMeta"><span>${pct.toFixed(0)}% funded</span><span>${isUnlocked?'Unlocked':`Unlocks ${new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(parseDate(v.unlockDate))}`}</span></div><div class="vaultActions"><button class="primary addBtn" data-id="${v.id}">Add money</button><button class="secondary withdrawBtn" data-id="${v.id}" ${isUnlocked?'':'disabled'}>${isUnlocked?'Withdraw':'Withdrawal locked'}</button></div>`;
+    el.innerHTML=`<div class="vaultTop"><div><p class="eyebrow">${isUnlocked?'AVAILABLE':'LOCKED SAVINGS'}</p><h3>${escapeHtml(v.name)}</h3></div><span class="lockPill ${isUnlocked?'unlocked':''}">${isUnlocked?'Unlocked':'🔒 '+remaining+' day'+(remaining===1?'':'s')}</span></div><div class="vaultAmount">${money(balance)}</div><p class="muted">of ${money(v.goal)} goal</p><div class="progressTrack"><div class="progressBar" style="width:${pct}%"></div></div><div class="vaultMeta"><span>${pct.toFixed(0)}% funded</span><span>${isUnlocked?'Unlocked':`Unlocks ${new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(parseDate(v.unlockDate))}`}</span></div><div class="vaultActions"><button class="primary addBtn" data-id="${v.id}">Add money</button><button class="secondary withdrawBtn" data-id="${v.id}" ${isUnlocked?'':'disabled'}>${isUnlocked?'Withdraw':'Withdrawal locked'}</button></div>${canDelete?`<div class="vaultDeleteRow"><button class="dangerGhost deleteVaultBtn" data-id="${v.id}">Delete empty vault</button></div>`:''}`;
     list.append(el);
   });
   document.querySelectorAll('.addBtn').forEach(b=>b.onclick=()=>openAction(b.dataset.id,'add'));
   document.querySelectorAll('.withdrawBtn').forEach(b=>b.onclick=()=>openAction(b.dataset.id,'withdraw'));
+  document.querySelectorAll('.deleteVaultBtn').forEach(b=>b.onclick=()=>deleteVault(b.dataset.id));
+}
+
+function deleteVault(id){
+  const v=vaults.find(x=>x.id===id); if(!v)return;
+  if(Number(v.balance||0)!==0){alert('Only empty vaults can be deleted.');return;}
+  if(!confirm(`Delete “${v.name}”? This cannot be undone.`))return;
+  vaults=vaults.filter(x=>x.id!==id);
+  save();
 }
 
 function openAction(id,type){
