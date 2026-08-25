@@ -1,15 +1,19 @@
 (()=>{
   function install(){
-    const bankCard=document.querySelector('#dwollaBankVerifyCard');
-    if(!bankCard||document.querySelector('#dwollaTransferTestBtn'))return;
+    let btn=document.querySelector('#dwollaTransferTestBtn');
+    if(!btn){
+      const anchor=document.querySelector('#dwollaBankVerifyCard')||document.querySelector('#dwollaSetupCard');
+      if(!anchor)return;
+      const section=document.createElement('section');
+      section.className='card bankCard';
+      section.id='dwollaTransferTestCard';
+      section.innerHTML=`<div><p class="eyebrow">DWOLLA SANDBOX</p><h2>Test bank → Dwolla Balance</h2><p class="muted">Moves $1.00 of sandbox funds from SaveMoney Test Checking into the verified customer's Dwolla Balance. No real money moves.</p></div><button id="dwollaTransferTestBtn" class="secondary">Test $1 transfer</button>`;
+      anchor.insertAdjacentElement('afterend',section);
+      btn=document.querySelector('#dwollaTransferTestBtn');
+    }
+    if(!btn||btn.dataset.bound==='1')return;
+    btn.dataset.bound='1';
 
-    const section=document.createElement('section');
-    section.className='card bankCard';
-    section.id='dwollaTransferTestCard';
-    section.innerHTML=`<div><p class="eyebrow">DWOLLA SANDBOX</p><h2>Test bank → Dwolla Balance</h2><p class="muted">Moves $1.00 of sandbox funds from SaveMoney Test Checking into the verified customer's Dwolla Balance. No real money moves.</p></div><button id="dwollaTransferTestBtn" class="secondary">Test $1 transfer</button>`;
-    bankCard.insertAdjacentElement('afterend',section);
-
-    const btn=document.querySelector('#dwollaTransferTestBtn');
     btn.onclick=async()=>{
       if(!authSession?.accessToken){alert('Sign in first.');return;}
       btn.disabled=true;btn.textContent='Sending $1…';
