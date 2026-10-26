@@ -39,7 +39,7 @@
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice"><strong>Sandbox:</strong> the normal SaveMoney vault ledger is still test-only. A separate Sepolia hard-lock prototype is now connected below so you can test the blockchain lock directly inside SaveMoney.</section>
+    <section class="notice"><strong>Sandbox:</strong> your database goal balances, Stripe test payments, Dwolla test transfers, and Sepolia blockchain tokens are separate. Only MetaMask fake-USDC transfers fund your blockchain hard-lock vaults.</section>
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
@@ -69,6 +69,20 @@
         <button id="chainWithdrawBtn" class="secondary" type="button" disabled>Withdrawal locked</button>
         <button id="chainExplorerLink" class="ghost" type="button">View on explorer</button>
       </div>
+      <section class="chainFundingBox" aria-labelledby="chainFundingHeading">
+        <div><h3 id="chainFundingHeading">Add funds — choose how to test</h3><p class="muted">Only MetaMask sends test USDC into the hard-lock contract. Test card and test bank transactions do not create or deliver crypto.</p></div>
+        <div class="chainFundingFields">
+          <label>Funding method<select id="chainFundingMethod">
+            <option value="wallet">MetaMask — deposit fake USDC</option>
+            <option value="card">Debit card — Stripe sandbox test</option>
+            <option value="bank">Bank account — Dwolla sandbox test</option>
+          </select></label>
+          <label>Amount (test only)<div class="moneyInput"><span>$</span><input id="chainFundingAmount" type="number" min="0.01" max="10000" step="0.01" inputmode="decimal" value="1.00" /></div></label>
+          <button id="chainFundingStart" class="primary" type="button">Deposit test USDC via MetaMask</button>
+        </div>
+        <p id="chainFundingNote" class="muted">Only test USDC from MetaMask changes the blockchain balance.</p>
+        <p id="chainFundingResult" class="chainFundingResult" role="status" hidden></p>
+      </section>
       <p id="chainStatus" class="chainStatus">Reading the Sepolia vault…</p>
       <p class="autoPayNote">Testnet only. mUSDC and SepoliaETH have no cash value. Do not send real tokens to these unaudited prototype contracts.</p>
     </section>
@@ -127,6 +141,7 @@
   <script src="funding-options.js?v=2" defer></script>
   <script src="blockchain-vault.js?v=3" defer></script>
   <script src="chain-vault-deploy.js?v=1" defer></script>
+  <script src="chain-funding.js?v=1" defer></script>
   <script src="password-recovery.js?v=1" defer></script>
 </body>
 </html>
