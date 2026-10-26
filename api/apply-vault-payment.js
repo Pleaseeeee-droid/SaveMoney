@@ -35,13 +35,28 @@ export default async function handler(req,res){
     });
     const session=await stripeResponse.json();
     if(!stripeResponse.ok)return res.status(stripeResponse.status).json({error:session?.error?.message||'Stripe verification failed.'});
-    if(session?.metadata?.purpose!=='savemoney_vault_deposit')return res.status(400).json({error:'This is not a SaveMoney vault deposit.'});
+    const purpose=session?.metadata?.purpose;
+    if(purpose!=='savemoney_vault_deposit'&&purpose!=='savemoney_chain_card_demo')
+      return res.status(400).json({error:'This is not a SaveMoney checkout.'});
     if(session.payment_status!=='paid')return res.status(409).json({error:'Payment is not confirmed as paid yet.'});
     if(session.metadata?.user_id!==user.id)return res.status(403).json({error:'This payment does not belong to your account.'});
 
     const amount=Number(session.amount_total||0)/100;
     const vaultId=session.metadata?.vault_id;
     if(!vaultId||!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Stripe payment data is incomplete.'});
+
+    const chain=user?.user_metadata?.savemoney_chain_vaults?.[vaultId]||null;
+    if(purpose==='savemoney_chain_card_demo'){
+      if(!chain?.address||session.metadata?.chain_address?.toLowerCase()!==String(chain.address).toLowerCase())
+        return res.status(409).json({error:'The linked blockchain vault could not be verified.'});
+      // Demo only: card checkout is unrelated to minting/purchasing crypto.
+      return res.status(200).json({
+        ok:true,sandbox:true,demoOnly:true,sessionId:session.id,
+        vaultId,amount,credited:false,tokenTransferred:false,
+        message:'Stripe TEST card checkout succeeded. No USDC was created or sent to your blockchain vault.'
+      });
+    }
+    if(chain?.address)return res.status(409).json({error:'Blockchain vaults cannot be credited by ordinary Stripe checkout.'});
 
     const rpc=await fetch(`${supabaseUrl}/rest/v1/rpc/apply_stripe_deposit`,{
       method:'POST',
