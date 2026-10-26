@@ -75,7 +75,7 @@ export default async function handler(req,res){
       const unlock=new Date(`${unlockDate}T00:00:00`);
       if(!(unlock>today))return res.status(400).json({error:'Unlock date must be after today.'});
       if(requestedChain){
-        const expected=Math.floor(unlock.getTime()/1000);
+        const expected=Math.floor(Date.parse(`${unlockDate}T12:00:00Z`)/1000);
         if(Math.abs(requestedChain.unlockTimestamp-expected)>120)return res.status(400).json({error:'Blockchain unlock time does not match the SaveMoney unlock date.'});
       }
       const r=await rest(url,key,token,'vaults',{
@@ -99,7 +99,7 @@ export default async function handler(req,res){
       const owned=await rest(url,key,token,`vaults?id=eq.${encodeURIComponent(id)}&select=id,unlock_date`);
       const rows=await owned.json();
       if(!owned.ok||!Array.isArray(rows)||!rows.length)return res.status(404).json({error:'Vault not found.'});
-      const expected=Math.floor(new Date(`${rows[0].unlock_date}T00:00:00`).getTime()/1000);
+      const expected=Math.floor(Date.parse(`${rows[0].unlock_date}T12:00:00Z`)/1000);
       if(Math.abs(requestedChain.unlockTimestamp-expected)>120)return res.status(400).json({error:'Blockchain unlock time does not match this vault.'});
       const mappings=chainMap(user);
       await updateMetadata(url,key,token,user,{...mappings,[id]:requestedChain});
