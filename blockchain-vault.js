@@ -172,6 +172,33 @@
     const chosen=[...menu.options].some(o=>o.value===current)?current:'prototype';
     menu.value=chosen;
     if(chosen!==selectedId)select(chosen);
+    refreshCards().catch(()=>{});
+  }
+  async function refreshCards(){
+    const entries=vaults.filter(v=>v.chain?.address);
+    if(!entries.length)return;
+    const p=await getReadProvider();
+    for(const v of entries){
+      const el=document.querySelector('[data-chain-vault="'+v.id+'"]');
+      if(!el)continue;
+      const amountEl=el.querySelector('.vaultAmount');
+      try{
+        const c=new Contract(v.chain.address,VAULT_ABI,p);
+        const [rawBalance,token,beneficiary,unlock]=await Promise.all([
+          c.balance(),c.token(),c.beneficiary(),c.unlockTime()
+        ]);
+        if(token.toLowerCase()!==TOKEN_ADDRESS.toLowerCase()||
+           beneficiary.toLowerCase()!==v.chain.beneficiary.toLowerCase()||
+           Number(unlock)!==Number(v.chain.unlockTimestamp))throw new Error('Unexpected on-chain vault details');
+        const balance=Number(formatUnits(rawBalance,TOKEN_DECIMALS));
+        amountEl.textContent=fmt(balance)+' mUSDC';
+        const pct=v.goal>0?Math.max(0,Math.min(100,balance/v.goal*100)):0;
+        const bar=el.querySelector('.progressBar');
+        if(bar)bar.style.width=pct+'%';
+        const funded=el.querySelector('.vaultMeta span');
+        if(funded)funded.textContent=pct.toFixed(0)+'% of test goal';
+      }catch(err){amountEl.textContent='On-chain balance unavailable';}
+    }
   }
   function select(id){
     const selected=id==='prototype'?null:vaults.find(v=>v.id===id&&v.chain?.address);
