@@ -41,6 +41,12 @@ export default async function handler(req, res) {
     if(!vaultResponse.ok)return res.status(vaultResponse.status).json({error:vaults?.message||'Could not verify vault.'});
     if(!Array.isArray(vaults)||!vaults.length)return res.status(404).json({error:'Vault not found.'});
     const vault=vaults[0];
+    // A Stripe sandbox card payment is NOT crypto settlement and must never
+    // be presented as an on-chain deposit.
+    const mapping=user?.user_metadata?.savemoney_chain_vaults||{};
+    const linked=Object.prototype.hasOwnProperty.call(mapping,vault.id)?mapping[vault.id]:null;
+    const demo=Boolean(linked?.address);
+    if(req.body?.chainDemo&&!demo)return res.status(400).json({error:'This savings goal has no linked blockchain contract.'});
 
     const baseUrl = `https://${req.headers.host}`;
     const body = new URLSearchParams();
@@ -51,8 +57,9 @@ export default async function handler(req, res) {
     body.set('line_items[0][quantity]', '1');
     body.set('line_items[0][price_data][currency]', 'usd');
     body.set('line_items[0][price_data][unit_amount]', String(cents));
-    body.set('line_items[0][price_data][product_data][name]', `SaveMoney sandbox deposit — ${String(vault.name).slice(0,40)}`);
-    body.set('metadata[purpose]', 'savemoney_vault_deposit');
+    body.set('line_items[0][price_data][product_data][name]', `SaveMoney ${demo?'test card checkout (not USDC)':'sandbox deposit'} — ${String(vault.name).slice(0,40)}`);
+    body.set('metadata[purpose]', demo?'savemoney_chain_card_demo':'savemoney_vault_deposit');
+    if(demo)body.set('metadata[chain_address]',String(linked.address));
     body.set('metadata[vault_id]', vault.id);
     body.set('metadata[user_id]', user.id);
 
