@@ -39,7 +39,7 @@
   function refreshVaultOptions(){
     const select=$('#autoPayVault');if(!select)return;
     const current=select.value;
-    select.innerHTML=vaults.map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+    select.innerHTML=vaults.filter(v=>!v.chain?.address).map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
     if(vaults.some(v=>v.id===current))select.value=current;
   }
 
