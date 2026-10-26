@@ -8,7 +8,7 @@ let vaults=[];
 let authSession=JSON.parse(localStorage.getItem(AUTH_SESSION_KEY)||'null');
 let activeAction=null;
 
-const normalizeVault=v=>({id:v.id,name:v.name,goal:Number(v.goal_amount??v.goal??0),balance:Number(v.balance||0),unlockDate:v.unlock_date??v.unlockDate,createdAt:v.created_at??v.createdAt});
+const normalizeVault=v=>({id:v.id,name:v.name,goal:Number(v.goal_amount??v.goal??0),balance:Number(v.balance||0),unlockDate:v.unlock_date??v.unlockDate,createdAt:v.created_at??v.createdAt,chain:v.chain||null});
 function authHeaders(extra={}){return {'Content-Type':'application/json',Authorization:`Bearer ${authSession?.accessToken||''}`,...extra};}
 function total(){return vaults.reduce((a,v)=>a+Number(v.balance||0),0)}
 function unlocked(v){return today()>=parseDate(v.unlockDate)}
@@ -99,14 +99,36 @@ function render(){
   const list=$('#vaultList');list.innerHTML='';
   if(!vaults.length){list.append($('#emptyTemplate').content.cloneNode(true));return;}
   vaults.forEach(v=>{
-    const isUnlocked=unlocked(v),balance=Number(v.balance||0),pct=Math.max(0,Math.min(100,(balance/Number(v.goal))*100)),remaining=Math.max(0,daysLeft(v.unlockDate)),canDelete=balance===0;
+    const isUnlocked=v.chain?.unlockTimestamp?Date.now()/1000>=Number(v.chain.unlockTimestamp):unlocked(v),balance=Number(v.balance||0),pct=Math.max(0,Math.min(100,(balance/Number(v.goal))*100)),remaining=Math.max(0,daysLeft(v.unlockDate)),canDelete=balance===0&&!v.chain?.address;
     const el=document.createElement('article');el.className='vault card';
     el.innerHTML=`<div class="vaultTop"><div><p class="eyebrow">${isUnlocked?'AVAILABLE':'LOCKED SAVINGS'}</p><h3>${escapeHtml(v.name)}</h3></div><span class="lockPill ${isUnlocked?'unlocked':''}">${isUnlocked?'Unlocked':'🔒 '+remaining+' day'+(remaining===1?'':'s')}</span></div><div class="vaultAmount">${money(balance)}</div><p class="muted">of ${money(v.goal)} goal</p><div class="progressTrack"><div class="progressBar" style="width:${pct}%"></div></div><div class="vaultMeta"><span>${pct.toFixed(0)}% funded</span><span>${isUnlocked?'Unlocked':`Unlocks ${new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(parseDate(v.unlockDate))}`}</span></div><div class="vaultActions"><button class="primary addBtn" data-id="${v.id}">Add money</button><button class="secondary withdrawBtn" data-id="${v.id}" ${isUnlocked?'':'disabled'}>${isUnlocked?'Withdraw':'Withdrawal locked'}</button></div>${canDelete?`<div class="vaultDeleteRow"><button class="dangerGhost deleteVaultBtn" data-id="${v.id}">Delete empty vault</button></div>`:''}`;
+
+    if(v.chain?.address){
+      el.dataset.chainVault=v.id;
+      el.querySelector('.vaultAmount').textContent='Reading on-chain…';
+      el.querySelector('.vaultActions').innerHTML='<button class="primary openChainBtn" data-id="'+v.id+'" type="button">Manage hard-lock vault</button>';
+      el.insertAdjacentHTML('beforeend','<p class="muted chainCardNote">🔐 Sepolia test USDC — blockchain-enforced, not a Stripe balance</p>');
+    }else if(balance===0&&parseDate(v.unlockDate)>today()){
+      const action=el.querySelector('.vaultActions');
+      action.innerHTML='<button class="primary activateChainBtn" data-id="'+v.id+'" type="button">Activate hard lock</button>';
+      el.insertAdjacentHTML('beforeend','<p class="muted chainCardNote">Hard-lock setup needed before adding test USDC</p>');
+    }
     list.append(el);
   });
   document.querySelectorAll('.addBtn').forEach(b=>b.onclick=()=>openAction(b.dataset.id,'add'));
   document.querySelectorAll('.withdrawBtn').forEach(b=>b.onclick=()=>openAction(b.dataset.id,'withdraw'));
+
   document.querySelectorAll('.deleteVaultBtn').forEach(b=>b.onclick=()=>deleteVault(b.dataset.id));
+  document.querySelectorAll('.activateChainBtn').forEach(b=>b.onclick=()=>{
+    const v=vaults.find(v=>v.id===b.dataset.id);
+    if(!window.SaveMoneyChainDeployment){alert('The hard-lock module is not ready. Refresh the page.');return;}
+    window.SaveMoneyChainDeployment.activate(v);
+  });
+  document.querySelectorAll('.openChainBtn').forEach(b=>b.onclick=()=>{
+    window.SaveMoneyChainApp?.select?.(b.dataset.id);
+    document.querySelector('.chainSectionHead')?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  window.dispatchEvent(new Event('savemoney:rendered'));
 }
 
 async function deleteVault(id){
@@ -162,7 +184,13 @@ $('#vaultForm').addEventListener('submit',async e=>{
   try{
     const r=await fetch('/api/vaults',{method:'POST',headers:authHeaders(),body:JSON.stringify({name,goalAmount:goal,unlockDate})});
     const data=await r.json();if(!r.ok)throw new Error(data.error||'Could not create vault.');
-    vaults.push(normalizeVault(data.vault));render();e.target.reset();$('#vaultDialog').close();
+    
+const created=normalizeVault(data.vault);vaults.push(created);render();e.target.reset();$('#vaultDialog').close();
+    if(window.SaveMoneyChainDeployment){
+      await window.SaveMoneyChainDeployment.activate(created);
+    }else{
+      alert('Goal saved, but the blockchain module was not ready. Use Activate hard lock on this goal to finish.');
+    }
   }catch(err){alert(err.message);}finally{submit.disabled=false;submit.textContent='Create locked vault';}
 });
 
