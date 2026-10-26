@@ -169,6 +169,10 @@ async function runCron(){
     if(s.lastRun===runKey)continue;
     const vault=await verifyVaultForUser(user.id,s.vaultId);
     if(!vault){results.push({user:user.id,status:'skipped',reason:'vault missing'});continue;}
+    if(user.user_metadata?.savemoney_chain_vaults?.[vault.id]?.address){
+      results.push({user:user.id,status:'skipped',reason:'blockchain vault is not supported for fiat auto-pay'});
+      continue;
+    }
     try{
       const payment=s.source==='card'?await creditCardAutopay(user,vault,s,runKey):await bankAutopay(user,vault,s,runKey);
       const updated={...s,lastRun:runKey,lastStatus:payment.status,lastProvider:payment.provider,lastPaymentId:payment.id||null};
@@ -207,6 +211,8 @@ export default async function handler(req,res){
       if(!schedule)return res.status(400).json({ok:false,error:'Choose a vault, amount from $0.50 to $10,000, and a monthly day from 1 to 28.'});
       const vault=await verifyVaultForUser(user.id,schedule.vaultId);
       if(!vault)return res.status(404).json({ok:false,error:'Vault not found.'});
+      if(user.user_metadata?.savemoney_chain_vaults?.[vault.id]?.address)
+        return res.status(409).json({ok:false,error:'Auto-pay cannot fund a blockchain vault until real fiat-to-USDC settlement is integrated. The wallet test deposit works separately.'});
       const previous=user.user_metadata?.savemoney_autopay;
       if(previous?.vaultId===schedule.vaultId&&previous?.source===schedule.source&&Number(previous?.amount)===schedule.amount&&Number(previous?.day)===schedule.day){
         schedule.lastRun=previous.lastRun||null;schedule.lastStatus=previous.lastStatus||null;
