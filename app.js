@@ -231,7 +231,17 @@ async function handleVaultPaymentReturn(){
     if(!response.ok||!data.ok)throw new Error(data.error||'Could not apply payment.');
     history.replaceState({},'',location.pathname);
     await loadVaults();
-    setTimeout(()=>alert(`${money(data.amount)} Stripe sandbox deposit confirmed and saved to your vault. It is now synced across your devices.`),100);
+    if(data.demoOnly){
+      setTimeout(()=>{
+        alert('Stripe sandbox card test succeeded for '+money(data.amount)+'.\n\nNO USDC was bought, minted, or deposited. Your blockchain vault balance is unchanged.\n\nUse Add test USDC with MetaMask to make a separate on-chain deposit.');
+        if(data.vaultId){
+          window.SaveMoneyChainApp?.select?.(data.vaultId);
+          document.querySelector('.chainSectionHead')?.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      },100);
+    }else{
+      setTimeout(()=>alert(`${money(data.amount)} Stripe sandbox deposit confirmed and saved to your DATABASE test vault. No real money moved.`),100);
+    }
   }catch(error){
     setTimeout(()=>alert(`Stripe payment could not be applied: ${error.message}`),100);
   }
