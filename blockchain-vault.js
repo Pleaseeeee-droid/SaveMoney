@@ -4,7 +4,9 @@
   const $=s=>document.querySelector(s);
   const CHAIN_ID='0xaa36a7';
   const TOKEN_ADDRESS='0x5Df8a09276305F6c3c3F523bE5FF4fDE4829Dc92';
-  const VAULT_ADDRESS='0x2128E0ed09DeD1F2031DE0B28bfbaE94EfcfCb89';
+  const PROTOTYPE_ADDRESS='0x2128E0ed09DeD1F2031DE0B28bfbaE94EfcfCb89';
+  let VAULT_ADDRESS=PROTOTYPE_ADDRESS;
+  let selectedId='prototype';
   const TOKEN_DECIMALS=6;
   const TOKEN_ABI=[
     'function balanceOf(address account) view returns (uint256)',
@@ -37,7 +39,8 @@
   function setBusy(busy){
     ['#chainConnectBtn','#chainRefreshBtn','#chainDepositBtn'].forEach(sel=>{const b=$(sel);if(b)b.disabled=busy;});
     const withdraw=$('#chainWithdrawBtn');
-    if(withdraw)withdraw.disabled=busy||!unlockTimestamp||Math.floor(Date.now()/1000)<unlockTimestamp;
+    if(withdraw)withdraw.disabled=busy||!account||!unlockTimestamp||Math.floor(Date.now()/1000)<unlockTimestamp;
+    const add=$('#chainDepositBtn');if(add)add.disabled=busy||Boolean(unlockTimestamp&&Math.floor(Date.now()/1000)>=unlockTimestamp);
   }
 
   async function ensureSepolia(){
@@ -79,6 +82,13 @@
       const [rawBalance,rawUnlock,beneficiary,tokenAddress]=await Promise.all([
         vault.balance(),vault.unlockTime(),vault.beneficiary(),vault.token()
       ]);
+      const linked=selectedId==='prototype'?null:vaults.find(v=>v.id===selectedId)?.chain;
+      if(tokenAddress.toLowerCase()!==TOKEN_ADDRESS.toLowerCase()||
+         (linked&&(
+          String(linked.address).toLowerCase()!==VAULT_ADDRESS.toLowerCase()||
+          String(linked.beneficiary).toLowerCase()!==beneficiary.toLowerCase()||
+          Number(linked.unlockTimestamp)!==Number(rawUnlock)
+         )))throw new Error('Contract details do not match the expected Sepolia vault. Do not deposit.');
       unlockTimestamp=Number(rawUnlock);
       const balance=formatUnits(rawBalance,TOKEN_DECIMALS);
       $('#chainVaultBalance').textContent=`${fmt(balance)} mUSDC`;
@@ -88,8 +98,13 @@
       const unlockDate=new Date(unlockTimestamp*1000);
       $('#chainUnlockTime').textContent=unlockDate.toLocaleString();
       const locked=Math.floor(Date.now()/1000)<unlockTimestamp;
+      const addBtn=$('#chainDepositBtn');if(addBtn)addBtn.disabled=!account||!locked;
+      if(selectedId!=='prototype'){
+        const card=document.querySelector('[data-chain-vault="'+selectedId+'"] .vaultAmount');
+        if(card)card.textContent=fmt(balance)+' mUSDC';
+      }
       const withdraw=$('#chainWithdrawBtn');
-      if(withdraw){withdraw.disabled=locked;withdraw.textContent=locked?'Withdrawal locked':'Withdraw unlocked funds';}
+      if(withdraw){withdraw.disabled=locked||!account||beneficiary.toLowerCase()!==String(account).toLowerCase()||rawBalance===0n;withdraw.textContent=locked?'Withdrawal locked':'Withdraw unlocked funds';}
       $('#chainLockBadge').textContent=locked?'🔒 Hard locked':'Unlocked';
       $('#chainLockBadge').className=`lockPill ${locked?'':'unlocked'}`;
 
@@ -144,12 +159,43 @@
     }finally{setBusy(false);}
   }
 
+
+  function sync(){
+    const menu=$('#chainVaultPicker');if(!menu)return;
+    const current=selectedId;
+    menu.innerHTML='';
+    const p=document.createElement('option');p.value='prototype';p.textContent='Original Sepolia test vault';menu.append(p);
+    for(const v of vaults){
+      if(!v.chain?.address)continue;
+      const o=document.createElement('option');o.value=v.id;o.textContent=v.name+' — '+short(v.chain.address);menu.append(o);
+    }
+    const chosen=[...menu.options].some(o=>o.value===current)?current:'prototype';
+    menu.value=chosen;
+    if(chosen!==selectedId)select(chosen);
+  }
+  function select(id){
+    const selected=id==='prototype'?null:vaults.find(v=>v.id===id&&v.chain?.address);
+    if(id!=='prototype'&&!selected)return;
+    selectedId=id;
+    VAULT_ADDRESS=selected?.chain?.address||PROTOTYPE_ADDRESS;
+    unlockTimestamp=0;
+    const menu=$('#chainVaultPicker');if(menu)menu.value=id;
+    $('#chainVaultBalance').textContent='Reading blockchain…';
+    $('#chainUnlockTime').textContent='Reading…';
+    $('#chainDepositBtn').disabled=true;
+    $('#chainWithdrawBtn').disabled=true;
+    refresh();
+  }
+
   function install(){
     $('#chainConnectBtn')?.addEventListener('click',()=>connect().catch(err=>{setBusy(false);setStatus(err.message,'error');alert(err.message);}));
     $('#chainRefreshBtn')?.addEventListener('click',refresh);
     $('#chainDepositBtn')?.addEventListener('click',deposit);
     $('#chainWithdrawBtn')?.addEventListener('click',withdraw);
-    $('#chainExplorerLink')?.addEventListener('click',()=>window.open(`https://sepolia.etherscan.io/address/${VAULT_ADDRESS}`,'_blank','noopener,noreferrer'));
+    $('#chainExplorerLink')?.addEventListener('click',()=>window.open('https://sepolia.etherscan.io/address/'+VAULT_ADDRESS,'_blank','noopener,noreferrer'));
+    $('#chainVaultPicker')?.addEventListener('change',event=>select(event.target.value));
+    window.addEventListener('savemoney:rendered',sync);
+    window.SaveMoneyChainApp={select,sync};
     window.ethereum?.on?.('accountsChanged',accounts=>{account=accounts?.[0]||null;signer=null;provider=null;if(account)connect().catch(()=>{});else refresh();});
     window.ethereum?.on?.('chainChanged',()=>{provider=null;signer=null;account=null;refresh();});
     refresh();
