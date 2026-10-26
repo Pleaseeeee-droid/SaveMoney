@@ -119,6 +119,8 @@ export default async function handler(req,res){
         if(!scheduleKey)return res.status(400).json({ok:false,error:'Missing auto-pay schedule key.'});
         const vault=await verifyVault(token,vaultId);
         if(!vault)return res.status(404).json({ok:false,error:'Vault not found.'});
+        if(user.user_metadata?.savemoney_chain_vaults?.[vault.id]?.address)
+          return res.status(409).json({ok:false,error:'Stripe test card auto-pay cannot fund a smart-contract vault. No on-chain USDC will be transferred.'});
 
         const params=new URLSearchParams({customer:customer.id,type:'card',limit:'1'});
         const list=await stripeRequest(secretKey,`/v1/payment_methods?${params.toString()}`);
