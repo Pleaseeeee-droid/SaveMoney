@@ -42,3 +42,10 @@
 .baseSepoliaFaucets{font-size:.81rem;line-height:1.5;margin:13px 0 0}
 .baseSepoliaFaucets a{color:#91d6ff;text-decoration:underline}
 @media(max-width:840px){.baseSepoliaActions{grid-template-columns:1fr}.baseSepoliaExplorer{width:100%}}
+
+.baseLockVerification{margin-top:14px;padding:14px;border:1px solid #28445e;border-radius:12px;background:#0a1c2a}
+.baseLockVerification>.muted{font-size:.81rem;margin:8px 0 0;line-height:1.5}
+.baseLockVerification .chainStatus{margin-top:10px}
+.baseLockVerification .chainStatus:not(.error){border-color:rgba(82,224,176,.35);color:#bcebdc}
+.baseLockVerification [hidden]{display:none}
+@media(max-width:720px){.baseLockVerification>button{width:100%}}
