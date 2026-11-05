@@ -2,6 +2,18 @@
 
 A mobile-first installable web app for date-locked savings goals.
 
+## Current status (November 2026)
+
+- Private sign-in and savings goal tracking through Supabase.
+- Stripe and Dwolla **sandbox** tests (not real deposits or cash custody).
+- Legacy **Ethereum Sepolia** smart-contract vaults using fake mUSDC.
+- New **Base Sepolia** experimental vaults using Circle **test USDC**. Create them in the app with MetaMask, verify on-chain balances, and test deposit/withdrawal after unlock.
+- Mainnet Base USDC wallet display is **read-only**; it does not lock, buy, transfer, or custody real money.
+- The Base Sepolia contract has **11 passing Foundry tests**, and the browser wiring has **6 passing checks**. Its MetaMask deployment and transactions still require user validation. This is **not an independent security audit**.
+- **REAL DEPOSITS ARE DISABLED. NEVER SEND REAL USDC TO A SAVEMONEY VAULT UNTIL A REVIEWED MAINNET CONTRACT AND FUNDING PROVIDER ARE APPROVED.**
+
+See [REAL_MONEY_LAUNCH.md](REAL_MONEY_LAUNCH.md) for the real-money security checklist.
+
 ## What works now
 
 - Create multiple savings vaults
@@ -14,7 +26,7 @@ A mobile-first installable web app for date-locked savings goals.
 - Install as a PWA on supported phones/desktops
 - Works offline after the first load
 
-> Important: the current balance is demo/local data stored in the browser. No real money is held or moved yet.
+> Historical note: this section describes the original local demo. The current app uses Supabase for test data, but **no real money is held or moved by SaveMoney**.
 
 ## Run it locally
 

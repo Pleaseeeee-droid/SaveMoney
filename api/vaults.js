@@ -33,7 +33,14 @@ function normalizeChain(value){
   const beneficiary=address(value.beneficiary);
   const chainId=Number(value.chainId);
   const unlockTimestamp=Number(value.unlockTimestamp);
-  if(!contractAddress||!tokenAddress||!beneficiary||chainId!==11155111||!Number.isInteger(unlockTimestamp)||unlockTimestamp<=0)return null;
+  const SUPPORTED_TEST_TOKENS={
+    11155111:'0x5df8a09276305f6c3c3f523be5ff4fde4829dc92',
+    84532:'0x036cbd53842c5426634e7929541ec2318f3dcf7e'
+  };
+  if(!contractAddress||!tokenAddress||!beneficiary||
+     !SUPPORTED_TEST_TOKENS[chainId]||
+     tokenAddress.toLowerCase()!==SUPPORTED_TEST_TOKENS[chainId]||
+     !Number.isSafeInteger(unlockTimestamp)||unlockTimestamp<=0)return null;
   return {address:contractAddress,tokenAddress,beneficiary,chainId,unlockTimestamp};
 }
 async function updateMetadata(url,key,token,user,nextMap){
@@ -102,6 +109,11 @@ export default async function handler(req,res){
       const expected=Math.floor(Date.parse(`${rows[0].unlock_date}T12:00:00Z`)/1000);
       if(Math.abs(requestedChain.unlockTimestamp-expected)>120)return res.status(400).json({error:'Blockchain unlock time does not match this vault.'});
       const mappings=chainMap(user);
+      const existing=normalizeChain(mappings[id]);
+      if(existing&&
+         (existing.address.toLowerCase()!==requestedChain.address.toLowerCase()||
+          existing.chainId!==requestedChain.chainId))
+        return res.status(409).json({error:'This savings goal already has a linked test vault. Its contract address cannot be replaced.'});
       await updateMetadata(url,key,token,user,{...mappings,[id]:requestedChain});
       return res.status(200).json({ok:true,chain:requestedChain});
     }
