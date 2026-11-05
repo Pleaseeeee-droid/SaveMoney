@@ -23,8 +23,15 @@
 - The user will need Base network fees to deposit/withdraw; account for stablecoin depeg, token freezing, wallet compromise/loss, no FDIC insurance, and irreversibility.
 - Auto-pay is disabled for blockchain vaults because fiat payment does not imply crypto delivery; do not silently enable this before an approved recurring onramp process exists.
 
+## November 2026 progress: Base Sepolia test-only candidate
+- Added `contracts/BaseSepoliaLockedSavings.sol` with immutable beneficiary and unlock time, repeated deposits, beneficiary-only withdrawals after unlock, no admin bypass, and a hardcoded Base Sepolia chain-ID check to reject Base Mainnet deployments.
+- Uses Circle's Base Sepolia test USDC address. It is **not deployed**, **not audited**, and **not connected to the app's real wallet interface**.
+- Added 11 Foundry tests in `test/BaseSepoliaLockedSavings.t.sol`, `foundry.toml`, and a GitHub Actions workflow `.github/workflows/base-sepolia-vault.yml` that installs pinned OpenZeppelin and forge-std versions.
+- Test execution results have **not been confirmed**; the CI job must pass before this candidate advances.
+- No production mainnet deployment or real-money transfer features were enabled.
+
 ## Next developer milestone
-Build a **Base Sepolia** version of the end-to-end flow using a pinned, reproducible audited-build target and regression tests; only then consider a tightly gated Base mainnet release. No mainnet money movement should be enabled by a simple feature flag until review is complete.
+Verify the Foundry tests and perform additional security review, then wire **Base Sepolia test-only** deposit/withdrawal flows in the app. Mainnet release remains blocked until independent review and verified onramp controls are complete.
 
 Sources:
 - Circle native USDC on Base: https://www.circle.com/multi-chain-usdc/base
