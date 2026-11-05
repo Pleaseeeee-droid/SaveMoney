@@ -12,6 +12,9 @@ on:
       - "contracts/**"
       - "test/**"
       - "foundry.toml"
+      - ".github/workflows/base-sepolia-vault.yml"
+      - "base-sepolia-*.js"
+      - "api/vaults.js"
 
 permissions:
   contents: read
@@ -27,5 +30,7 @@ jobs:
       - name: Install pinned Solidity libraries
         run: |
           forge install --no-git OpenZeppelin/openzeppelin-contracts@v5.4.0 foundry-rs/forge-std@v1.9.6
+      - name: Compile test vault
+        run: forge build
       - name: Run lock and withdrawal tests
         run: forge test -vv
