@@ -65,6 +65,48 @@
       <p class="liveWalletWarning"><strong>Not ready for deposits:</strong> We still need an independently reviewed mainnet lock contract and a verified bank/card-to-USDC onramp. Do not send real funds to any SaveMoney vault address yet.</p>
     </section>
 
+    <section class="sectionHead chainSectionHead" id="baseSepoliaSectionHead">
+      <div><p class="eyebrow">BASE SEPOLIA — TEST MONEY ONLY</p><h2>Next-generation test vaults</h2></div>
+      <span id="baseSepoliaLockBadge" class="lockPill">Not selected</span>
+    </section>
+    <section class="card chainCard" aria-labelledby="baseSepoliaHeading">
+      <div class="chainTop">
+        <div>
+          <h3 id="baseSepoliaHeading">Base Sepolia locked savings</h3>
+          <label class="chainPickerLabel" for="baseSepoliaVaultPicker">Your test vaults
+            <select id="baseSepoliaVaultPicker"><option value="">No Base Sepolia test vaults yet</option></select>
+          </label>
+          <p class="muted">Separate from Base Mainnet and older Ethereum Sepolia tests. Every vault has an unchangeable unlock date and a fixed beneficiary. All coins here are fake test tokens.</p>
+        </div>
+        <div class="chainTopActions">
+          <button id="baseSepoliaConnectBtn" class="primary" type="button">Connect MetaMask</button>
+          <button id="baseSepoliaRefreshBtn" class="ghost" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="chainBalanceRow">
+        <div><span>In Base Sepolia test lock</span><strong id="baseSepoliaLockedBalance">—</strong></div>
+        <div><span>Your test wallet</span><strong id="baseSepoliaWalletBalance">Connect MetaMask</strong></div>
+      </div>
+      <div class="chainDetails">
+        <div><span>Unlock time</span><strong id="baseSepoliaUnlock">—</strong></div>
+        <div><span>Test contract address</span><strong id="baseSepoliaAddress">—</strong></div>
+        <div><span>USDC token</span><strong>Base Sepolia TEST USDC</strong></div>
+        <div><span>Beneficiary</span><strong id="baseSepoliaBeneficiary">—</strong></div>
+      </div>
+      <div class="chainActions baseSepoliaActions">
+        <label>Test USDC amount<input id="baseSepoliaAmount" type="number" min="0.000001" step="0.01" value="1.00" inputmode="decimal" /></label>
+        <button id="baseSepoliaDepositBtn" class="primary" type="button" disabled>Deposit test USDC</button>
+        <button id="baseSepoliaWithdrawBtn" class="secondary" type="button" disabled>Withdraw after unlock</button>
+        <a id="baseSepoliaExplorer" class="ghost baseSepoliaExplorer" href="https://sepolia.basescan.org/" target="_blank" rel="noopener noreferrer" hidden>View on explorer</a>
+      </div>
+      <p id="baseSepoliaStatus" class="chainStatus" role="status">Loading Base Sepolia test vaults…</p>
+      <p class="muted baseSepoliaFaucets">Need free test tokens?
+        <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Circle test USDC faucet</a> ·
+        <a href="https://www.alchemy.com/faucets/base-sepolia" target="_blank" rel="noopener noreferrer">Base Sepolia test ETH faucet</a>
+      </p>
+      <p class="autoPayNote">TESTNET ONLY: fake USDC and test ETH have no cash value. This contract has not been independently audited. NEVER send real funds to a test vault.</p>
+    </section>
+
     <section class="sectionHead chainSectionHead"><div><p class="eyebrow">TESTNET HARD-LOCK VAULTS</p><h2>Blockchain vaults</h2></div><span id="chainLockBadge" class="lockPill">Checking…</span></section>
     <section class="card chainCard">
       <div class="chainTop">
@@ -146,7 +188,7 @@
     </section>
   </main>
 
-  <dialog id="vaultDialog"><form id="vaultForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Create a savings goal</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label><label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label><label>Unlock date<input id="vaultDate" type="date" required /></label><div class="lockWarning">New goals start empty. MetaMask will then ask to create a separate Sepolia hard-lock contract. This is fake test money only.</div><button class="primary wide" type="submit">Create locked vault</button></form></dialog>
+  <dialog id="vaultDialog"><form id="vaultForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p class="eyebrow">NEW SAVINGS VAULT</p><h2>Create a savings goal</h2></div><button id="closeDialogBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><label>Vault name<input id="vaultName" maxlength="40" placeholder="Emergency fund" required /></label><label>Goal amount<div class="moneyInput"><span>$</span><input id="vaultGoal" type="number" min="1" step="0.01" inputmode="decimal" placeholder="1000.00" required /></div></label><label>Unlock date<input id="vaultDate" type="date" required /></label><label>Test network<select id="vaultNetwork"><option value="base" selected>Base Sepolia — new test vault</option><option value="ethereum">Ethereum Sepolia — legacy test vault</option></select></label><div class="lockWarning">New goals start empty. MetaMask will deploy a separate hard-lock contract on the selected TEST network. Nothing here moves real money.</div><button class="primary wide" type="submit">Create locked vault</button></form></dialog>
 
   <dialog id="actionDialog"><form id="actionForm" method="dialog" class="dialogCard"><div class="dialogHead"><div><p id="actionEyebrow" class="eyebrow">VAULT ACTION</p><h2 id="actionTitle">Add money</h2></div><button id="closeActionBtn" type="button" class="iconBtn" aria-label="Close">×</button></div><p id="actionDescription" class="muted"></p><label id="fundingSourceRow">Pay from<select id="fundingSource"><option value="card">Debit card</option><option value="bank">Bank account</option></select></label><label>Amount<div class="moneyInput"><span>$</span><input id="actionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></div></label><button id="actionSubmit" class="primary wide" type="submit">Continue</button></form></dialog>
 
@@ -155,15 +197,17 @@
   <template id="emptyTemplate"><section class="empty card"><div class="emptyIcon">🔒</div><h3>No vaults yet</h3><p class="muted">Create one here and it will appear anywhere you sign in.</p></section></template>
 
   <script src="https://js.stripe.com/v3/" defer></script>
-    <script src="app.js?v=11" defer></script>
+    <script src="app.js?v=12" defer></script>
   <script src="dwolla-bank-verify.js?v=1" defer></script>
   <script src="dwolla-transfer-test.js?v=3" defer></script>
   <script src="payment-methods.js?v=1" defer></script>
   <script src="funding-options.js?v=3" defer></script>
-  <script src="blockchain-vault.js?v=3" defer></script>
+  <script src="blockchain-vault.js?v=4" defer></script>
   <script src="chain-vault-deploy.js?v=1" defer></script>
   <script src="chain-funding.js?v=1" defer></script>
   <script src="base-wallet-readonly.js?v=1" defer></script>
+  <script src="base-sepolia-vault.js?v=1" defer></script>
+  <script src="base-sepolia-deploy.js?v=1" defer></script>
   <script src="password-recovery.js?v=1" defer></script>
 </body>
 </html>
