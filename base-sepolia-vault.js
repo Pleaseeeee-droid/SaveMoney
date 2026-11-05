@@ -119,7 +119,7 @@
         if(selectedId!==targetId)return;
         $('#baseSepoliaWalletBalance').textContent=fmt(walletAmount)+' test USDC';
       }else $('#baseSepoliaWalletBalance').textContent='Connect MetaMask';
-      status(locked?'Test vault verified on Base Sepolia. Early withdrawals are enforced by its contract.':'Test vault unlocked on Base Sepolia. Only its beneficiary may withdraw.');
+      status(locked?'Contract details verified on Base Sepolia. Use Verify early-withdrawal lock for a direct, gas-free test.':'Test vault unlocked on Base Sepolia. Only its beneficiary may withdraw.');
       setDisabled();
     }catch(e){
       unlock=0n;rawVaultBalance=0n;
