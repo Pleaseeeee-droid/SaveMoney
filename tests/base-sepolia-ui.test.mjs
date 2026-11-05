@@ -12,7 +12,7 @@ const api=read('api/vaults.js');
 const sw=read('sw.js');
 
 test('Base Sepolia module scripts are present and cached',()=>{
-  for(const asset of ['base-sepolia-vault.js?v=1','base-sepolia-deploy.js?v=1']){
+  for(const asset of ['base-sepolia-vault.js?v=2','base-sepolia-deploy.js?v=1']){
     assert.ok(html.includes(asset),asset+' missing from HTML');
     assert.ok(sw.includes(asset),asset+' missing from service-worker assets');
   }
@@ -24,7 +24,8 @@ test('all Base Sepolia UI IDs exist in HTML',()=>{
     'baseSepoliaRefreshBtn','baseSepoliaLockedBalance','baseSepoliaWalletBalance',
     'baseSepoliaUnlock','baseSepoliaAddress','baseSepoliaBeneficiary',
     'baseSepoliaDepositBtn','baseSepoliaWithdrawBtn','baseSepoliaAmount',
-    'baseSepoliaExplorer','baseSepoliaStatus','baseSepoliaLockBadge'
+    'baseSepoliaExplorer','baseSepoliaStatus','baseSepoliaLockBadge',
+    'baseSepoliaTestLockBtn','baseSepoliaLockResult'
   ])assert.ok(html.includes('id="'+id+'"'),id+' is missing');
 });
 
@@ -51,6 +52,18 @@ test('SaveMoney manages legacy and Base Sepolia vaults separately',()=>{
   assert.ok(legacy.includes('Number(v.chain.chainId)!==11155111'));
   assert.ok(api.includes('84532:'));
   assert.ok(api.includes('11155111:'));
+});
+
+test('withdrawal check is read-only and requires the exact VaultLocked revert',()=>{
+  assert.ok(base.includes('async function testEarlyWithdrawalLock()'));
+  assert.ok(base.includes('LOCK_CHECK_ABI.encodeFunctionData(\'withdraw\')'));
+  assert.ok(base.includes('await readProvider.call('));
+  assert.ok(base.includes("LOCKED_REVERT_SELECTOR"));
+  assert.ok(base.includes("revert?.revert?.name==='VaultLocked'"));
+  assert.ok(base.includes("if(!revert){"));
+  assert.ok(base.includes('INCONCLUSIVE:'));
+  assert.ok(base.includes("No transaction was sent"));
+  assert.ok(base.includes("baseSepoliaTestLockBtn"));
 });
 
 test('all client modules and mapped server endpoint parse as JavaScript',()=>{
