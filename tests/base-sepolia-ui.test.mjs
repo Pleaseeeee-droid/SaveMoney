@@ -12,7 +12,7 @@ const api=read('api/vaults.js');
 const sw=read('sw.js');
 
 test('Base Sepolia module scripts are present and cached',()=>{
-  for(const asset of ['base-sepolia-vault.js?v=1','base-sepolia-deploy.js?v=1']){
+  for(const asset of ['base-sepolia-vault.js?v=2','base-sepolia-deploy.js?v=1']){
     assert.ok(html.includes(asset),asset+' missing from HTML');
     assert.ok(sw.includes(asset),asset+' missing from service-worker assets');
   }
