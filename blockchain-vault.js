@@ -166,7 +166,7 @@
     menu.innerHTML='';
     const p=document.createElement('option');p.value='prototype';p.textContent='Original Sepolia test vault';menu.append(p);
     for(const v of vaults){
-      if(!v.chain?.address)continue;
+      if(!v.chain?.address||Number(v.chain.chainId)!==11155111)continue;
       const o=document.createElement('option');o.value=v.id;o.textContent=v.name+' — '+short(v.chain.address);menu.append(o);
     }
     const chosen=[...menu.options].some(o=>o.value===current)?current:'prototype';
@@ -175,7 +175,7 @@
     refreshCards().catch(()=>{});
   }
   async function refreshCards(){
-    const entries=vaults.filter(v=>v.chain?.address);
+    const entries=vaults.filter(v=>v.chain?.address&&Number(v.chain.chainId)===11155111);
     if(!entries.length)return;
     const p=await getReadProvider();
     for(const v of entries){
@@ -201,7 +201,7 @@
     }
   }
   function select(id){
-    const selected=id==='prototype'?null:vaults.find(v=>v.id===id&&v.chain?.address);
+    const selected=id==='prototype'?null:vaults.find(v=>v.id===id&&v.chain?.address&&Number(v.chain.chainId)===11155111);
     if(id!=='prototype'&&!selected)return;
     selectedId=id;
     VAULT_ADDRESS=selected?.chain?.address||PROTOTYPE_ADDRESS;
