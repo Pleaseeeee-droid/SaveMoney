@@ -41,7 +41,7 @@ contract BaseSepoliaLockedSavingsTest is Test {
     function testCorrectImmutableSettings() public view {
         assertEq(vault.beneficiary(), ALICE);
         assertEq(vault.unlockTime(), unlock);
-        assertEq(address(vault.USDC()), USDC);
+        assertEq(vault.USDC(), USDC);
         assertEq(vault.CHAIN_ID(), BASE_SEPOLIA);
     }
 
