@@ -15,6 +15,7 @@ on:
       - ".github/workflows/base-sepolia-vault.yml"
       - "base-sepolia-*.js"
       - "api/vaults.js"
+      - "tests/**"
 
 permissions:
   contents: read
@@ -34,3 +35,5 @@ jobs:
         run: forge build
       - name: Run lock and withdrawal tests
         run: forge test -vv
+      - name: Check Base Sepolia browser integration
+        run: node --test tests/base-sepolia-ui.test.mjs
