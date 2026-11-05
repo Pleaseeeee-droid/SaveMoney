@@ -1,0 +1,31 @@
+name: Base Sepolia vault contract tests
+
+on:
+  push:
+    paths:
+      - "contracts/**"
+      - "test/**"
+      - "foundry.toml"
+      - ".github/workflows/base-sepolia-vault.yml"
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "test/**"
+      - "foundry.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - name: Install pinned Solidity libraries
+        run: |
+          forge install --no-git OpenZeppelin/openzeppelin-contracts@v5.4.0 foundry-rs/forge-std@v1.9.6
+      - name: Run lock and withdrawal tests
+        run: forge test -vv
