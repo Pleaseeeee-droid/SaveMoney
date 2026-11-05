@@ -46,7 +46,8 @@ test('Base Sepolia deployer does not use Base Mainnet or mainnet token',()=>{
 
 test('SaveMoney manages legacy and Base Sepolia vaults separately',()=>{
   assert.ok(app.includes("window.SaveMoneyBaseApp?.select?."));
-  assert.ok(app.includes("window.SaveMoneyBaseDeployment.activate"));
+  assert.ok(app.includes("window.SaveMoneyBaseDeployment"));
+  assert.ok(app.includes("deployer.activate(created)"));
   assert.ok(legacy.includes('Number(v.chain.chainId)!==11155111'));
   assert.ok(api.includes('84532:'));
   assert.ok(api.includes('11155111:'));
