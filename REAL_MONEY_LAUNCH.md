@@ -24,14 +24,15 @@
 - Auto-pay is disabled for blockchain vaults because fiat payment does not imply crypto delivery; do not silently enable this before an approved recurring onramp process exists.
 
 ## November 2026 progress: Base Sepolia test-only candidate
-- Added `contracts/BaseSepoliaLockedSavings.sol` with immutable beneficiary and unlock time, repeated deposits, beneficiary-only withdrawals after unlock, no admin bypass, and a hardcoded Base Sepolia chain-ID check to reject Base Mainnet deployments.
-- Uses Circle's Base Sepolia test USDC address. It is **not deployed**, **not audited**, and **not connected to the app's real wallet interface**.
-- Added 11 Foundry tests in `test/BaseSepoliaLockedSavings.t.sol`, `foundry.toml`, and a GitHub Actions workflow `.github/workflows/base-sepolia-vault.yml` that installs pinned OpenZeppelin and forge-std versions.
-- Test execution results have **not been confirmed**; the CI job must pass before this candidate advances.
-- No production mainnet deployment or real-money transfer features were enabled.
+- Added `contracts/BaseSepoliaLockedSavings.sol` with fixed beneficiary, permanent unlock time, beneficiary-only withdrawals, repeated deposits, and Base Sepolia chain-ID enforcement. No admin early-unlock mechanism.
+- Added 11 Foundry tests, `foundry.toml`, and CI; **11 passed / 0 failed** in GitHub Actions on the integration PR.
+- Added 6 Node smoke checks for network separation, module loading, IDs and syntax; **6 passed / 0 failed** in GitHub Actions.
+- Added browser-side Base Sepolia test vault creation, verification, test-USDC deposits and withdrawals. These are **not yet end-to-end user tested in MetaMask**.
+- No production mainnet vault was deployed. No real funds, real USDC, card payments or bank transfers are routed to these test contracts. The user's existing Ethereum Sepolia demo vaults remain separate.
+- **Tests passing is not a security audit.** The contract has not been independently audited; no production use is permitted.
 
 ## Next developer milestone
-Verify the Foundry tests and perform additional security review, then wire **Base Sepolia test-only** deposit/withdrawal flows in the app. Mainnet release remains blocked until independent review and verified onramp controls are complete.
+Validate the Base Sepolia browser flow end-to-end using test ETH and test USDC, then perform additional contract and backend security reviews before considering mainnet. Mainnet release remains blocked until independent review and verified onramp controls are complete.
 
 Sources:
 - Circle native USDC on Base: https://www.circle.com/multi-chain-usdc/base
