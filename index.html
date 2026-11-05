@@ -35,11 +35,11 @@
     </header>
 
     <section class="hero card">
-      <div><p class="muted">Locked balance</p><div id="totalBalance" class="balance">$0.00</div><p id="nextUnlock" class="muted">No active vaults yet.</p></div>
+      <div><p class="muted">Database sandbox balance — not real money</p><div id="totalBalance" class="balance">$0.00</div><p id="nextUnlock" class="muted">No active vaults yet.</p></div>
       <button id="newVaultBtn" class="primary">+ New vault</button>
     </section>
 
-    <section class="notice"><strong>Sandbox:</strong> your database goal balances, Stripe test payments, Dwolla test transfers, and Sepolia blockchain tokens are separate. Only MetaMask fake-USDC transfers fund your blockchain hard-lock vaults.</section>
+    <section class="notice"><strong>Test mode:</strong> dollar balances in ordinary goals are DEMO records, not deposits. Stripe and Dwolla here use sandbox funds. Sepolia mUSDC is fake. The separate Base wallet panel is read-only: it does not lock or hold money.</section>
 
     <section class="sectionHead"><div><p class="eyebrow">YOUR VAULTS</p><h2>Savings goals</h2></div><button id="exportBtn" class="ghost">Export</button></section>
     <div id="vaultList" class="vaultGrid"></div>
