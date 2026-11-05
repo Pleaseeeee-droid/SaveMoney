@@ -31,7 +31,7 @@
   }
   async function loadSource(file,files){
     if(files[file])return;
-    if(files.size>30)throw new Error('Too many Solidity dependencies.');
+    if(Object.keys(files).length>40)throw new Error('Too many Solidity dependencies.');
     const url=file.startsWith(OZ_PREFIX)
       ?'https://cdn.jsdelivr.net/npm/@openzeppelin/contracts@5.4.0/'+file.slice(OZ_PREFIX.length)
       :'/'+file;
