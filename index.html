@@ -99,6 +99,11 @@
         <button id="baseSepoliaWithdrawBtn" class="secondary" type="button" disabled>Withdraw after unlock</button>
         <a id="baseSepoliaExplorer" class="ghost baseSepoliaExplorer" href="https://sepolia.basescan.org/" target="_blank" rel="noopener noreferrer" hidden>View on explorer</a>
       </div>
+      <div class="baseLockVerification">
+        <button id="baseSepoliaTestLockBtn" class="secondary" type="button" disabled>Verify early-withdrawal lock (free)</button>
+        <p class="muted">Simulates a withdrawal directly against the blockchain without MetaMask approval, sending a transaction, or paying gas.</p>
+        <p id="baseSepoliaLockResult" class="chainStatus" role="status" hidden></p>
+      </div>
       <p id="baseSepoliaStatus" class="chainStatus" role="status">Loading Base Sepolia test vaults…</p>
       <p class="muted baseSepoliaFaucets">Need free test tokens?
         <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Circle test USDC faucet</a> ·
@@ -206,7 +211,7 @@
   <script src="chain-vault-deploy.js?v=1" defer></script>
   <script src="chain-funding.js?v=1" defer></script>
   <script src="base-wallet-readonly.js?v=1" defer></script>
-  <script src="base-sepolia-vault.js?v=1" defer></script>
+  <script src="base-sepolia-vault.js?v=2" defer></script>
   <script src="base-sepolia-deploy.js?v=1" defer></script>
   <script src="password-recovery.js?v=1" defer></script>
 </body>
