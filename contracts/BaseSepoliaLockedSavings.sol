@@ -12,13 +12,14 @@ contract BaseSepoliaLockedSavings is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint256 public constant CHAIN_ID = 84532; // Base Sepolia, NOT Base Mainnet.
-    IERC20 public constant USDC = IERC20(0x036CbD53842c5426634e7929541eC2318f3dCF7e);
+    address public constant USDC = 0x036CbD53842c5426634e7929541eC2318f3dCF7e;
 
     address public immutable beneficiary;
     uint256 public immutable unlockTime;
 
     error WrongNetwork();
     error InvalidBeneficiary();
+    error InvalidToken();
     error UnlockMustBeFuture();
     error VaultLocked();
     error VaultExpired();
@@ -32,6 +33,7 @@ contract BaseSepoliaLockedSavings is ReentrancyGuard {
     constructor(address beneficiary_, uint256 unlockTime_) {
         if (block.chainid != CHAIN_ID) revert WrongNetwork();
         if (beneficiary_ == address(0)) revert InvalidBeneficiary();
+        if (USDC.code.length == 0) revert InvalidToken();
         if (unlockTime_ <= block.timestamp) revert UnlockMustBeFuture();
         beneficiary = beneficiary_;
         unlockTime = unlockTime_;
@@ -42,7 +44,7 @@ contract BaseSepoliaLockedSavings is ReentrancyGuard {
     function deposit(uint256 amount) external nonReentrant {
         if (block.timestamp >= unlockTime) revert VaultExpired();
         if (amount == 0) revert ZeroAmount();
-        USDC.safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(USDC).safeTransferFrom(msg.sender, address(this), amount);
         emit Deposited(msg.sender, amount);
     }
 
@@ -51,14 +53,14 @@ contract BaseSepoliaLockedSavings is ReentrancyGuard {
         if (msg.sender != beneficiary) revert NotBeneficiary();
         if (block.timestamp < unlockTime) revert VaultLocked();
 
-        uint256 amount = USDC.balanceOf(address(this));
+        uint256 amount = IERC20(USDC).balanceOf(address(this));
         if (amount == 0) revert NothingToWithdraw();
 
-        USDC.safeTransfer(beneficiary, amount);
+        IERC20(USDC).safeTransfer(beneficiary, amount);
         emit Withdrawn(beneficiary, amount);
     }
 
     function balance() external view returns (uint256) {
-        return USDC.balanceOf(address(this));
+        return IERC20(USDC).balanceOf(address(this));
     }
 }
