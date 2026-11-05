@@ -107,10 +107,13 @@ function render(){
       el.dataset.chainVault=v.id;
       el.querySelector('.vaultAmount').textContent='Reading on-chain…';
       el.querySelector('.vaultActions').innerHTML='<button class="primary openChainBtn" data-id="'+v.id+'" type="button">Manage hard-lock vault</button>';
-      el.insertAdjacentHTML('beforeend','<p class="muted chainCardNote">🔐 Sepolia test USDC — blockchain-enforced, not a Stripe balance</p>');
+      const isBase=Number(v.chain.chainId)===84532;
+      el.insertAdjacentHTML('beforeend',isBase
+        ?'<p class="muted chainCardNote">🔒 Base Sepolia TEST USDC — no real money</p>'
+        :'<p class="muted chainCardNote">🔒 Ethereum Sepolia fake mUSDC — no real money</p>');
     }else if(balance===0&&parseDate(v.unlockDate)>today()){
       const action=el.querySelector('.vaultActions');
-      action.innerHTML='<button class="primary activateChainBtn" data-id="'+v.id+'" type="button">Activate hard lock</button>';
+      action.innerHTML='<button class="primary activateChainBtn" data-id="'+v.id+'" type="button">Activate Base Sepolia test lock</button>';
       el.insertAdjacentHTML('beforeend','<p class="muted chainCardNote">Hard-lock setup needed before adding test USDC</p>');
     }
     list.append(el);
@@ -121,12 +124,18 @@ function render(){
   document.querySelectorAll('.deleteVaultBtn').forEach(b=>b.onclick=()=>deleteVault(b.dataset.id));
   document.querySelectorAll('.activateChainBtn').forEach(b=>b.onclick=()=>{
     const v=vaults.find(v=>v.id===b.dataset.id);
-    if(!window.SaveMoneyChainDeployment){alert('The hard-lock module is not ready. Refresh the page.');return;}
-    window.SaveMoneyChainDeployment.activate(v);
+    if(!window.SaveMoneyBaseDeployment){alert('The Base Sepolia module is not ready. Refresh the page.');return;}
+    window.SaveMoneyBaseDeployment.activate(v);
   });
   document.querySelectorAll('.openChainBtn').forEach(b=>b.onclick=()=>{
-    window.SaveMoneyChainApp?.select?.(b.dataset.id);
-    document.querySelector('.chainSectionHead')?.scrollIntoView({behavior:'smooth',block:'start'});
+    const v=vaults.find(v=>v.id===b.dataset.id);
+    if(Number(v?.chain?.chainId)===84532){
+      window.SaveMoneyBaseApp?.select?.(b.dataset.id);
+      document.querySelector('#baseSepoliaSectionHead')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }else{
+      window.SaveMoneyChainApp?.select?.(b.dataset.id);
+      document.querySelector('.chainSectionHead')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }
   });
   window.dispatchEvent(new Event('savemoney:rendered'));
 }
@@ -178,6 +187,7 @@ $('#dwollaSetupBtn').onclick=async()=>{
 $('#vaultForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const name=$('#vaultName').value.trim(),goal=Number($('#vaultGoal').value),unlockDate=$('#vaultDate').value;
+  const network=$('#vaultNetwork')?.value||'base';
   if(!name||goal<=0||!unlockDate)return;
   if(parseDate(unlockDate)<=today()){alert('Choose an unlock date after today.');return;}
   const submit=e.submitter;submit.disabled=true;submit.textContent='Creating…';
@@ -186,11 +196,9 @@ $('#vaultForm').addEventListener('submit',async e=>{
     const data=await r.json();if(!r.ok)throw new Error(data.error||'Could not create vault.');
     
 const created=normalizeVault(data.vault);vaults.push(created);render();e.target.reset();$('#vaultDialog').close();
-    if(window.SaveMoneyChainDeployment){
-      await window.SaveMoneyChainDeployment.activate(created);
-    }else{
-      alert('Goal saved, but the blockchain module was not ready. Use Activate hard lock on this goal to finish.');
-    }
+    const deployer=network==='ethereum'?window.SaveMoneyChainDeployment:window.SaveMoneyBaseDeployment;
+    if(deployer){await deployer.activate(created);}
+    else alert('Goal saved, but the test blockchain module did not load. Refresh and use Activate Base Sepolia test lock on the goal.');
   }catch(err){alert(err.message);}finally{submit.disabled=false;submit.textContent='Create locked vault';}
 });
 
